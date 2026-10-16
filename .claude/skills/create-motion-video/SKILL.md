@@ -30,7 +30,7 @@ user nói YouTube/ngang thì `"aspect": "16:9"`.
 | --- | --- | --- |
 | Câu hỏi mở đầu, khái niệm, lời khuyên | `title` | `icon`, `headline`, `kicker`, `label` |
 | Có con số (thời gian, %, số lần) | `number` | `number`, `unit`, `percent`, `headline` |
-| Liệt kê 2–4 thứ (tổng kết, các bước) | `list` | `headline`, `items[{icon,text}]` |
+| Liệt kê 2–5 thứ (tổng kết, các bước) | `list` | `headline`, `items[{icon,text}]` |
 | Sai vs đúng, cũ vs mới, A vs B | `compare` | `headline`, `left`, `right` |
 | Câu trích, câu chốt | `quote` | `headline` |
 

@@ -102,7 +102,10 @@
 
   /* own compositor layers: moving glows/rings must not force the big emoji glyphs to re-rasterise every frame */
   .blob, .ring, .ghost, .rule, .hero-icon, .item, .card, .vs, .num-row { will-change: transform; }
-
+  /* landscape: lists run in two columns so 4–5 rows fit under the headline */
+  .items { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 32px; }
+  .item { padding: 20px 28px; gap: 24px; }
+  .item .ic { width: 104px; height: 104px; font-size: 70px; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -223,7 +226,7 @@
 
   if (kind === "list") {
     var box = show($(".items"));
-    (Array.isArray(v.items) ? v.items : []).slice(0, 4).forEach(function (it, i) {
+    (Array.isArray(v.items) ? v.items : []).slice(0, 5).forEach(function (it, i) {
       var row = document.createElement("div"); row.className = "item";
       var ic = document.createElement("div"); ic.className = "ic"; ic.textContent = txt(it.icon || "•");
       var tx = document.createElement("div"); tx.className = "tx"; tx.textContent = txt(it.text);

@@ -164,7 +164,11 @@
           },
           {
             "icon": "👨‍🏫",
-            "text": "Feynman + ngủ đủ"
+            "text": "Feynman"
+          },
+          {
+            "icon": "😴",
+            "text": "Ngủ đủ giấc"
           }
         ],
         "tone": "purple"

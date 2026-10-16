@@ -30,7 +30,7 @@ pipeline stretches it to the scene length, so it never freezes. 16:9 and 9:16.
 
 | slot       | type     | limit       | notes                                                                      |
 | ---------- | -------- | ----------- | -------------------------------------------------------------------------- |
-| `kind`     | string   | enum        | `title` (icon + headline) · `number` (counter + unit + bar) · `list` (2–4 rows) · `compare` (two cards + VS) · `quote` |
+| `kind`     | string   | enum        | `title` (icon + headline) · `number` (counter + unit + bar) · `list` (2–5 rows) · `compare` (two cards + VS) · `quote` |
 | `headline` | string   | ≤7 words    | main line; wrap `*a phrase*` for the marker highlight                       |
 | `kicker`   | string   | ≤20         | pill on top (e.g. "Cách 1 · Pomodoro"); also the faint giant background word |
 | `label`    | string   | ≤12 words   | small supporting line under everything (optional)                          |
@@ -38,7 +38,7 @@ pipeline stretches it to the scene length, so it never freezes. 16:9 and 9:16.
 | `number`   | string   | digits      | `number`: counts up from 0 (e.g. "25", "2,5")                              |
 | `unit`     | string   | ≤8          | `number`: word after the number (e.g. "phút", "%")                         |
 | `percent`  | number   | 0–100       | `number`: how full the progress bar gets (default 100)                     |
-| `items`    | object[] | 2–4         | `list`: `{ "icon": "⏱️", "text": "Pomodoro" }`, text ≤4 words              |
+| `items`    | object[] | 2–5         | `list`: `{ "icon": "⏱️", "text": "Pomodoro" }`, text ≤4 words              |
 | `left` / `right` | object | —       | `compare`: `{ "icon", "title" (≤3 words), "text" (≤6 words) }`; left = the wrong/old way (struck through), right = the better way |
 | `tone`     | string   | enum        | `blue` · `warm` · `green` · `purple` · `red` · `dark` — change it between scenes |
 
