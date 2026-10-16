@@ -13,28 +13,38 @@ export const fetchTiming = { retryMs: [3000, 8000, 20000] };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function fetchImage(url: string | null, outPath: string): Promise<FetchResult> {
+  return fetchMedia(url, outPath, "image/");
+}
+
+/** Download a stock video clip (content-type video/*), with the same 429 back-off. */
+export async function fetchVideo(url: string | null, outPath: string): Promise<FetchResult> {
+  return fetchMedia(url, outPath, "video/", 120000);
+}
+
+async function fetchMedia(url: string | null, outPath: string, kind: string, timeout = 30000): Promise<FetchResult> {
   if (!url) return { success: false, reason: "no url provided (null)" };
   for (let attempt = 0; ; attempt++) {
-    const res = await fetchOnce(url, outPath);
+    const res = await fetchOnce(url, outPath, kind, timeout);
     const delay = fetchTiming.retryMs[attempt];
     if (res.success || res.reason !== "http 429" || delay === undefined) return res;
     await sleep(delay);
   }
 }
 
-async function fetchOnce(url: string, outPath: string): Promise<FetchResult> {
+async function fetchOnce(url: string, outPath: string, kind: string, timeout: number): Promise<FetchResult> {
   try {
     const resp = await axios.get<ArrayBuffer>(url, {
       responseType: "arraybuffer",
-      timeout: 30000,
+      timeout,
       // Wikimedia (403) and Flickr (502) reject axios' default User-Agent.
       headers: { "User-Agent": "autovideoclaude/1.0 (https://github.com/vanh26hihi/Autovideoclaude)" },
       validateStatus: (s) => s < 400,
     });
 
     const ct = String(resp.headers["content-type"] ?? "");
-    if (!ct.startsWith("image/")) {
-      return { success: false, reason: `non-image content-type: ${ct}` };
+    // some CDNs serve clips as application/octet-stream
+    if (!ct.startsWith(kind) && !(kind === "video/" && ct.startsWith("application/octet-stream"))) {
+      return { success: false, reason: `non-${kind.slice(0, -1)} content-type: ${ct}` };
     }
 
     await mkdir(dirname(outPath), { recursive: true });

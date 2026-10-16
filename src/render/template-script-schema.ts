@@ -56,12 +56,28 @@ export const TemplateScriptSchema = z.object({
   }),
   /** Optional background music (else BG_MUSIC_FILE / assets/music/default.mp3 if present). */
   music: MusicSpec.optional(),
+  /** Word-by-word karaoke subtitles burned at the bottom (estimated word timing). */
+  subtitles: z
+    .object({
+      style: z.enum(["karaoke", "none"]).default("karaoke"),
+      wordsPerLine: z.number().int().min(2).max(8).default(5),
+      activeColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#FFD400"),
+    })
+    .optional(),
+  /** Global colour/texture look applied to the whole video. */
+  look: z
+    .object({
+      style: z.enum(["none", "film"]).default("none"),
+      /** Film look: orange camcorder date stamp, e.g. "'98 10 16"; "" hides it. */
+      stamp: z.string().default(""),
+    })
+    .optional(),
   /** Output aspect for every scene (templates render a matching composition). */
   aspect: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
   scenes: z
     .array(TemplateScene)
     .min(3)
-    .max(12)
+    .max(24)
     .refine((s) => s[0]?.type === "hook", { message: "scenes[0] must be type=hook" })
     .refine((s) => s[s.length - 1]?.type === "outro", { message: "last scene must be type=outro" }),
 });

@@ -178,3 +178,99 @@ export async function searchImage(
   }
   return null;
 }
+
+export interface VideoHit {
+  url: string;
+  provider: string;
+  credit: string;
+  width: number;
+  height: number;
+  /** Clip length in seconds (0 = unknown). */
+  duration: number;
+}
+
+type VideoProvider = (q: string, o: Orientation) => Promise<VideoHit[]>;
+
+/** Pixabay Videos — same free PIXABAY_API_KEY as the photos. */
+const pixabayVideos: VideoProvider = async (q) => {
+  const key = process.env.PIXABAY_API_KEY;
+  if (!key) return [];
+  const { data } = await axios.get("https://pixabay.com/api/videos/", {
+    params: { key, q, video_type: "film", safesearch: true, per_page: 12 },
+    headers: { "User-Agent": UA },
+    timeout: TIMEOUT,
+  });
+  return (data.hits ?? []).map((h: any) => {
+    const r = pickRendition(
+      ["tiny", "small", "medium", "large"]
+        .map((k) => h.videos?.[k])
+        .filter((v: any) => v?.url)
+        .map((v: any) => ({ url: v.url, width: v.width ?? 0, height: v.height ?? 0 })),
+    );
+    return r && { ...r, provider: "Pixabay", credit: `${h.user ?? "Pixabay"} / Pixabay`, duration: h.duration ?? 0 };
+  }).filter(Boolean);
+};
+
+/** Pexels Videos — needs PEXELS_API_KEY. */
+const pexelsVideos: VideoProvider = async (q, o) => {
+  const key = process.env.PEXELS_API_KEY;
+  if (!key) return [];
+  const { data } = await axios.get("https://api.pexels.com/videos/search", {
+    params: { query: q, orientation: o, per_page: 12 },
+    headers: { Authorization: key, "User-Agent": UA },
+    timeout: TIMEOUT,
+  });
+  return (data.videos ?? []).map((v: any) => {
+    const r = pickRendition(
+      (v.video_files ?? [])
+        .filter((f: any) => f.link && f.file_type === "video/mp4")
+        .map((f: any) => ({ url: f.link, width: f.width ?? 0, height: f.height ?? 0 })),
+    );
+    return r && { ...r, provider: "Pexels", credit: `${v.user?.name ?? "Pexels"} / Pexels`, duration: v.duration ?? 0 };
+  }).filter(Boolean);
+};
+
+/** Smallest file that is full-HD (short side ≥ 1080, no upscaling), else the biggest there is. */
+export function pickRendition<T extends { width: number; height: number }>(files: T[]): T | undefined {
+  const sorted = [...files].sort((a, b) => a.width * a.height - b.width * b.height);
+  return sorted.find((f) => Math.min(f.width, f.height) >= 1080) ?? sorted[sorted.length - 1];
+}
+
+/** "Bob / Pixabay — https://…" or "Bob / Pixabay" → "Bob / Pixabay". */
+export const creditAuthor = (credit: string) => credit.split(" — ")[0].trim();
+
+/** Clips that match the frame's orientation (less cropping) come first; order is otherwise kept. */
+export function rankVideos(hits: VideoHit[], o: Orientation): VideoHit[] {
+  const fits = (h: VideoHit) =>
+    o === "square" || (o === "portrait" ? h.height > h.width : h.width >= h.height);
+  return [...hits.filter(fits), ...hits.filter((h) => !fits(h))];
+}
+
+const VIDEO_PROVIDERS: [string, VideoProvider][] = [
+  ["pexels", pexelsVideos],
+  ["pixabay", pixabayVideos],
+];
+
+/**
+ * Find a stock video clip for `query` (English, "who + doing what + where").
+ * Needs PEXELS_API_KEY or PIXABAY_API_KEY; returns null when nothing is found,
+ * and the scene then falls back to a photo (image_query) or icons.
+ */
+export async function searchVideo(
+  query: string,
+  orientation: Orientation = "portrait",
+  pick = 0,
+  /** Clips/authors already used in this video: never reuse a clip, and prefer another author. */
+  used: { urls: Set<string>; authors: Set<string> } = { urls: new Set(), authors: new Set() },
+): Promise<VideoHit | null> {
+  for (const [name, fn] of VIDEO_PROVIDERS) {
+    try {
+      const fresh = rankVideos((await politely(name, () => fn(query.trim(), orientation))).filter((h) => h.url && !used.urls.has(h.url)), orientation);
+      const hits = [...fresh.filter((h) => !used.authors.has(h.credit)), ...fresh.filter((h) => used.authors.has(h.credit))];
+      if (hits.length) return hits[Math.min(pick, hits.length - 1)];
+    } catch (e: any) {
+      log.info(`  video search ${name}: ${e.response?.status ?? e.message ?? e}`);
+    }
+  }
+  return null;
+}
