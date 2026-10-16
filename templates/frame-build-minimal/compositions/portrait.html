@@ -132,7 +132,7 @@
                 font-weight: 800;
                 font-size: 195px;
                 letter-spacing: -4px;
-                line-height: 0.98;
+                line-height: 1.1;
                 text-align: center;
             }
             .hero {
@@ -152,6 +152,10 @@
                 background-clip: text;
                 color: transparent;
                 text-shadow: none;
+                /* background-clip:text only paints inside the box: give stacked
+                   Vietnamese diacritics (Ắ, Ầ, Ễ…) room above the tight line-height. */
+                padding: 0.22em 0 0.06em;
+                margin: -0.22em 0 -0.06em;
             }
             @keyframes chReveal {
                 to {
