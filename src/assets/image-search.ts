@@ -54,8 +54,8 @@ const pixabay: Provider = async (q, o) => {
   }));
 };
 
-/** Openverse — CC-licensed photos, no key. */
-const openverse: Provider = async (q, o) => {
+/** Openverse — CC-licensed photos, no key. Not in the default chain (see PROVIDERS). */
+export const openverse: Provider = async (q, o) => {
   const { data } = await axios.get("https://api.openverse.org/v1/images/", {
     params: {
       q,
@@ -106,17 +106,29 @@ const wikimedia: Provider = async (q, o) => {
     }));
 };
 
+// Openverse is not in the chain: in testing it returned off-topic and even
+// suggestive images despite mature=false. Kept above for manual use only.
 const PROVIDERS: [string, Provider][] = [
   ["pexels", pexels],
   ["pixabay", pixabay],
-  ["openverse", openverse],
   ["wikimedia", wikimedia],
 ];
 
+/** "tired man yawning at desk" → ["tired man yawning at desk", "tired man yawning", "tired man"]. */
+export function queryVariants(query: string): string[] {
+  const words = query.trim().split(/\s+/).filter((w) => !/^(a|an|the|of|on|in|at|with|and|for|to)$/i.test(w));
+  const out = [query.trim()];
+  for (let n = Math.min(words.length, 4); n >= 2; n--) {
+    const v = words.slice(0, n).join(" ");
+    if (!out.includes(v)) out.push(v);
+  }
+  return out;
+}
+
 /**
  * Find a real photo for `query` (English keywords work best). Tries Pexels and
- * Pixabay when their free API keys are set, then the key-less Openverse and
- * Wikimedia Commons. `pick` chooses among the results (0 = best match).
+ * Pixabay when their free API keys are set (recommended: stock photos that
+ * match the topic), then key-less Wikimedia Commons with shorter queries. `pick` chooses among the results (0 = best match).
  * Returns null when nothing is found — the template then falls back to icons.
  */
 export async function searchImage(
@@ -125,11 +137,16 @@ export async function searchImage(
   pick = 0,
 ): Promise<ImageHit | null> {
   for (const [name, fn] of PROVIDERS) {
-    try {
-      const hits = (await fn(query, orientation)).filter((h) => h.url);
-      if (hits.length) return hits[Math.min(pick, hits.length - 1)];
-    } catch (e: any) {
-      log.info(`  image search ${name}: ${e.response?.status ?? e.message ?? e}`);
+    // Stock APIs handle full phrases; Wikimedia matches every word, so retry shorter.
+    const variants = name === "wikimedia" ? queryVariants(query) : [query.trim()];
+    for (const q of variants) {
+      try {
+        const hits = (await fn(q, orientation)).filter((h) => h.url);
+        if (hits.length) return hits[Math.min(pick, hits.length - 1)];
+      } catch (e: any) {
+        log.info(`  image search ${name}: ${e.response?.status ?? e.message ?? e}`);
+        break;
+      }
     }
   }
   return null;

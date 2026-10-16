@@ -46,12 +46,14 @@ describe("inlineSceneImage", () => {
 
 describe("autoFindSceneImage", () => {
   it("searches a photo when only image_query is given", async () => {
-    nock("https://api.openverse.org").get("/v1/images/").query(true)
-      .reply(200, { results: [{ url: "https://img/run.jpg", width: 2000, creator: "Bo", license: "by", source: "flickr" }] });
+    process.env.PEXELS_API_KEY = "k";
+    nock("https://api.pexels.com").get("/v1/search").query(true)
+      .reply(200, { photos: [{ photographer: "Bo", src: { portrait: "https://img/run.jpg" } }] });
     const { autoFindSceneImage } = await import("./image-inline.js");
     const r = await autoFindSceneImage({ image_query: "man running sunrise", icons: ["🏃"] }, "portrait", "b1");
     expect(r.inputs.image).toBe("https://img/run.jpg");
-    expect(r.credit).toContain("Bo / BY");
+    expect(r.credit).toContain("Bo / Pexels");
+    delete process.env.PEXELS_API_KEY;
   });
 
   it("keeps an explicit image", async () => {

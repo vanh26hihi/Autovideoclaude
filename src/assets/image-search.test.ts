@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import nock from "nock";
-import { searchImage } from "./image-search.js";
+import { searchImage, queryVariants } from "./image-search.js";
 
 beforeEach(() => {
   nock.cleanAll();
@@ -18,25 +18,26 @@ describe("searchImage", () => {
     expect(hit).toEqual({ url: "https://img/p.jpg", provider: "Pexels", credit: "Ann / Pexels" });
   });
 
-  it("falls back to key-less Openverse", async () => {
-    nock("https://api.openverse.org").get("/v1/images/").query(true)
-      .reply(200, { results: [{ url: "https://img/o.jpg", width: 2000, creator: "Bo", license: "by", source: "flickr" }] });
-    const hit = await searchImage("running man");
-    expect(hit?.url).toBe("https://img/o.jpg");
-    expect(hit?.credit).toBe("Bo / BY (flickr)");
+  it("falls back to Wikimedia, shortening the query until it matches", async () => {
+    nock("https://commons.wikimedia.org").get("/w/api.php")
+      .query((q) => String(q.gsrsearch).startsWith("tired man yawning desk")).reply(200, {});
+    nock("https://commons.wikimedia.org").get("/w/api.php")
+      .query((q) => String(q.gsrsearch).startsWith("tired man yawning ")).reply(200, {});
+    nock("https://commons.wikimedia.org").get("/w/api.php")
+      .query((q) => String(q.gsrsearch).startsWith("tired man ")).reply(200, {
+        query: { pages: { "1": { index: 1, imageinfo: [{ mime: "image/jpeg", width: 3000, url: "https://w/o.jpg", thumburl: "https://w/t.jpg" }] } } },
+      });
+    expect((await searchImage("tired man yawning desk"))?.url).toBe("https://w/t.jpg");
   });
 
-  it("falls back to Wikimedia when Openverse fails", async () => {
-    nock("https://api.openverse.org").get("/v1/images/").query(true).reply(500);
-    nock("https://commons.wikimedia.org").get("/w/api.php").query(true).reply(200, {
-      query: { pages: { "1": { index: 1, imageinfo: [{ mime: "image/jpeg", width: 3000, url: "https://w/o.jpg", thumburl: "https://w/t.jpg" }] } } },
-    });
-    expect((await searchImage("brain"))?.url).toBe("https://w/t.jpg");
+  it("builds shorter query variants without stop words", () => {
+    expect(queryVariants("tired man yawning at desk")).toEqual([
+      "tired man yawning at desk", "tired man yawning desk", "tired man yawning", "tired man",
+    ]);
   });
 
   it("returns null when nothing matches", async () => {
-    nock("https://api.openverse.org").get("/v1/images/").query(true).reply(200, { results: [] });
-    nock("https://commons.wikimedia.org").get("/w/api.php").query(true).reply(200, {});
+    nock("https://commons.wikimedia.org").get("/w/api.php").query(true).times(3).reply(200, {});
     expect(await searchImage("zzzz")).toBeNull();
   });
 });

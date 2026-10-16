@@ -118,7 +118,8 @@ Cấu trúc bắt buộc:
 
 - hook → **ưu tiên `frame-visual-full`** (1 icon/ảnh cực lớn + caption hook ngắn), hoặc `frame-liquid-bg-hero` (slots: kicker, headline, subheadline, cta, brand, logo, brand_label; `headline` ≤ 6 từ, gradient tuỳ chỉnh qua `headline_from`/`headline_to`). `kicker`/`brand`/`logo`/`brand_label` chỉ điền khi user đã cung cấp.
 - **body → mặc định `frame-visual-full`** (≥ 70% scene body). Slots: `image_query`, `image`, `image_pick`, `icons[]`, `layout`, `labels[]`, `caption`, `kicker`, `tone`:
-    - `image_query` (**bắt buộc mỗi scene**): 2–5 từ khoá **tiếng Anh**, mô tả cụ thể một bức ảnh chụp nói đúng ý scene — vd "person scrolling phone in bed at night", "tired man yawning office", "runner tying shoes sunrise", "brain neurons illustration". Tránh từ trừu tượng ("motivation", "success") — tả cảnh nhìn thấy được. Pipeline tự tìm ảnh dọc (9:16) qua Pexels/Pixabay (nếu có `PEXELS_API_KEY`/`PIXABAY_API_KEY` trong `.env.local`), rồi Openverse và Wikimedia Commons (miễn phí bản quyền, không cần key), tải về và nhúng. Nguồn ảnh ghi vào `image-credits.txt` trong outputDir.
+    - `image_query` (**bắt buộc mỗi scene**): **2–4 từ khoá tiếng Anh**, danh từ cụ thể trước, tả cảnh nhìn thấy được — vd "phone bed night", "tired man desk", "runner sunrise", "woman reading book". Tránh từ trừu tượng ("motivation", "success") và tên riêng dễ nhầm. Pipeline tự tìm ảnh dọc (9:16) qua **Pexels/Pixabay** (cần `PEXELS_API_KEY` hoặc `PIXABAY_API_KEY` miễn phí trong `.env.local` — **nên có**, ảnh stock khớp nội dung), không có key thì dùng Wikimedia Commons (tự rút ngắn từ khoá; ảnh hay lệch chủ đề). Ảnh tìm được + nguồn ghi vào `image-credits.txt` trong outputDir.
+    - Chưa có key Pexels/Pixabay → **nhắc user đăng ký key miễn phí** trước khi render.
     - `image_pick` (tuỳ chọn, mặc định 0): lấy kết quả thứ n nếu ảnh đầu không hợp (xoá `clips/scene-<id>.mp4` rồi chạy lại).
     - `image`: đường dẫn file hoặc URL ảnh cụ thể (file user đưa, `og:image` bài báo) — có `image` thì bỏ qua `image_query`. Tải lỗi / không tìm được → tự dùng `icons`.
     - `icons` (dự phòng, vẫn nên điền): 1–3 emoji to (📱 💡 😴 🔥 🧠 💪 ⏰ 📈 …) — Claude TỰ CHỌN emoji nói đúng ý. `layout`: `single` (1 icon khổng lồ), `flow` (2–3 icon nối mũi tên = nguyên nhân → kết quả / các bước), `vs` (2 icon đối đầu, `labels` = tên 2 vế, ≤ 10 ký tự). Có `image` thì chỉ hiện ảnh; `icons` là phương án dự phòng khi ảnh tải lỗi (nên luôn điền).
@@ -205,6 +206,10 @@ npm run pipeline -- <outputDir>/script.json
 
 CLI tự nhận `renderer: "hyperframes"` và chạy template pipeline (TTS → render
 từng template → fit theo giọng đọc → ghép + trộn SFX). Lỗi → báo rõ + đường dẫn outputDir.
+
+### Step 8b: Kiểm tra ảnh
+
+Mở `image-credits.txt` và xem 1 khung hình mỗi cảnh (vd `ffmpeg -ss 3 -i clips/scene-<id>.mp4 -frames:v 1 preview-<id>.png`). Ảnh lệch chủ đề hoặc không phù hợp (nhạy cảm, quảng cáo, chữ lạ) → đổi `image_query` hoặc tăng `image_pick`, xoá `clips/scene-<id>*.mp4` rồi chạy lại pipeline.
 
 ### Step 9: Báo kết quả
 
