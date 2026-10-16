@@ -45,20 +45,27 @@ describe("inlineSceneImage", () => {
 });
 
 describe("autoFindSceneImage", () => {
-  it("searches a photo when only image_query is given", async () => {
+  it("searches, downloads and caches a photo for image_query", async () => {
     process.env.PEXELS_API_KEY = "k";
     nock("https://api.pexels.com").get("/v1/search").query(true)
-      .reply(200, { photos: [{ photographer: "Bo", src: { portrait: "https://img/run.jpg" } }] });
+      .reply(200, { photos: [{ photographer: "Bo", src: { portrait: "https://img.example/run.jpg" } }] });
+    nock("https://img.example").get("/run.jpg").reply(200, TINY_PNG, { "content-type": "image/png" });
     const { autoFindSceneImage } = await import("./image-inline.js");
-    const r = await autoFindSceneImage({ image_query: "man running sunrise", icons: ["🏃"] }, "portrait", "b1");
-    expect(r.inputs.image).toBe("https://img/run.jpg");
+    const r = await autoFindSceneImage({ image_query: "man running sunrise", icons: ["🏃"] }, "portrait", "b1", tmp);
+    expect(String(r.inputs.image)).toMatch(/\.img$/);
     expect(r.credit).toContain("Bo / Pexels");
+    // second call: served from the cache, no network
+    const again = await autoFindSceneImage({ image_query: "man running sunrise" }, "portrait", "b9", tmp);
+    expect(again.inputs.image).toBe(r.inputs.image);
+    expect(again.credit).toContain("Bo / Pexels");
+    const inlined = await inlineSceneImage(again.inputs, tmp, "b9");
+    expect(String(inlined.image)).toMatch(/^data:image\/png;base64,/);
     delete process.env.PEXELS_API_KEY;
   });
 
   it("keeps an explicit image", async () => {
     const { autoFindSceneImage } = await import("./image-inline.js");
-    const r = await autoFindSceneImage({ image: "a.jpg", image_query: "x" }, "portrait", "b2");
+    const r = await autoFindSceneImage({ image: "a.jpg", image_query: "x" }, "portrait", "b2", tmp);
     expect(r.inputs.image).toBe("a.jpg");
     expect(r.credit).toBeUndefined();
   });
