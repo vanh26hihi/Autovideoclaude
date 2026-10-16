@@ -10,5 +10,5 @@ Vendored and adapted from:
 
 - Wrapped content in a HyperFrames 0.6 `#root` composition node.
 - Replaced hardcoded sample copy with `data-composition-variables` slots: `meta`, `display_lines` (array, built into stacked lines), `accent_index` (which line gets the electric blue-outlined treatment), `script` (handwritten accent), `caption`.
-- **Vietnamese fonts:** Syne → **Unbounded** (display) and Caveat → **Dancing Script** (handwritten) — both cover Vietnamese; **Space Mono** (mono meta/caption) kept as it already does.
+- **Vietnamese fonts:** Syne → **Unbounded** (display) and Caveat → **Lobster** (handwritten; Dancing Script's marks clipped under background-clip) — both cover Vietnamese; **Space Mono** (mono meta/caption) kept as it already does.
 - Added a **9:16 portrait** composition at `compositions/portrait.html` — re-laid-out as a top (blue) / bottom (dark) split; `index.html` keeps the upstream 16:9 left/right split. Pure CSS/SVG `@keyframes` are unchanged.
