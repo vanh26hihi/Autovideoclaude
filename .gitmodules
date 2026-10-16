@@ -1,0 +1,100 @@
+[submodule "vendor/motion/claude-motion"]
+	path = vendor/motion/claude-motion
+	url = https://github.com/whaleyxbt/claude-motion.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/claude-motion-design"]
+	path = vendor/motion/claude-motion-design
+	url = https://github.com/howseen-ai/claude-motion-design.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/motion-graphics-skills"]
+	path = vendor/motion/motion-graphics-skills
+	url = https://github.com/charlie947/motion-graphics-skills.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/claude-remotion-skill"]
+	path = vendor/motion/claude-remotion-skill
+	url = https://github.com/haidrrrry/claude-remotion-skill.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/klik-anim-skill-creation"]
+	path = vendor/motion/klik-anim-skill-creation
+	url = https://github.com/t3knobox/klik-anim-skill-creation.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/hyperframes-motion-reel-skill"]
+	path = vendor/motion/hyperframes-motion-reel-skill
+	url = https://github.com/Sunwood-ai-labs/hyperframes-motion-reel-skill.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/product-launch-motion"]
+	path = vendor/motion/product-launch-motion
+	url = https://github.com/AbubakrChan/product-launch-motion.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/cth-animate"]
+	path = vendor/motion/cth-animate
+	url = https://github.com/cth9191/animate.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/motion-design-skills"]
+	path = vendor/motion/motion-design-skills
+	url = https://github.com/iart-ai/motion-design-skills.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/hyperframes-student-kit"]
+	path = vendor/motion/hyperframes-student-kit
+	url = https://github.com/nateherkai/hyperframes-student-kit.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/hyperframes"]
+	path = vendor/motion/hyperframes
+	url = https://github.com/heygen-com/hyperframes.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/remotion"]
+	path = vendor/motion/remotion
+	url = https://github.com/remotion-dev/remotion.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/remotion-skills"]
+	path = vendor/motion/remotion-skills
+	url = https://github.com/remotion-dev/skills.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/GSAP"]
+	path = vendor/motion/GSAP
+	url = https://github.com/greensock/GSAP.git
+	branch = master
+	shallow = true
+[submodule "vendor/motion/motion-design-skill"]
+	path = vendor/motion/motion-design-skill
+	url = https://github.com/LottieFiles/motion-design-skill.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/awesome-motion-design-agent-skills"]
+	path = vendor/motion/awesome-motion-design-agent-skills
+	url = https://github.com/frankxai/awesome-motion-design-agent-skills.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/barty-motion-graphics"]
+	path = vendor/motion/barty-motion-graphics
+	url = https://github.com/Barty-Bart/motion-graphics.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/motion-dev-animations-skill"]
+	path = vendor/motion/motion-dev-animations-skill
+	url = https://github.com/199-biotechnologies/motion-dev-animations-skill.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/motion-js"]
+	path = vendor/motion/motion-js
+	url = https://github.com/motiondivision/motion.git
+	branch = main
+	shallow = true
+[submodule "vendor/motion/lottie-web"]
+	path = vendor/motion/lottie-web
+	url = https://github.com/airbnb/lottie-web.git
+	branch = master
+	shallow = true
