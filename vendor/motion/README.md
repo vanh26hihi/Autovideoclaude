@@ -18,11 +18,15 @@ LICENSE before copying anything from it into `templates/` or `.claude/skills/`.
 | [nateherkai/hyperframes-student-kit](https://github.com/nateherkai/hyperframes-student-kit) | 15 skills + 406 HyperFrames motion cards (reels, Shorts) | **own terms** — read first |
 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | The HTML→video engine this project renders with | Apache-2.0 |
 | [remotion-dev/remotion](https://github.com/remotion-dev/remotion) | React video framework | **company licence** needed for teams > 3 |
-| [remotion-dev/skills](https://github.com/remotion-dev/skills) | Official Remotion agent skills | check repo |
-| [greensock/GSAP](https://github.com/greensock/GSAP) | JS animation library (HyperFrames timelines) | GSAP standard licence |
+| [remotion-dev/skills](https://github.com/remotion-dev/skills) | Official Remotion agent skills | **no licence file** — read only |
+| [greensock/GSAP](https://github.com/greensock/GSAP) | JS animation library (HyperFrames timelines) | **no licence file** (GSAP standard terms) — use via npm |
 | [LottieFiles/motion-design-skill](https://github.com/LottieFiles/motion-design-skill) | Timing, easing, Disney's 12 principles, engine-agnostic | MIT |
 | [frankxai/awesome-motion-design-agent-skills](https://github.com/frankxai/awesome-motion-design-agent-skills) | Curated list: GSAP, Motion, Remotion, Lottie, Rive | CC0 |
-| [Barty-Bart/motion-graphics](https://github.com/Barty-Bart/motion-graphics) | Illustrative B-roll straight from a transcript | check repo |
+| [Barty-Bart/motion-graphics](https://github.com/Barty-Bart/motion-graphics) | Illustrative B-roll straight from a transcript | **unclear licence** — read first |
 | [199-biotechnologies/motion-dev-animations-skill](https://github.com/199-biotechnologies/motion-dev-animations-skill) | Motion.dev web animations (scroll, spring, drag) | MIT |
 | [motiondivision/motion](https://github.com/motiondivision/motion) | React/JS animation library (ex Framer Motion) | MIT |
 | [airbnb/lottie-web](https://github.com/airbnb/lottie-web) | Lottie player for the browser | MIT |
+
+Libraries (hyperframes, remotion, GSAP, motion, lottie-web) belong in package.json via npm,
+not copied from here. These submodules are not fetched by a normal clone; get one with
+`git submodule update --init --depth 1 vendor/motion/<folder>` (remotion is ~4 GB).
