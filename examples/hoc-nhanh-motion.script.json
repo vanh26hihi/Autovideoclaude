@@ -1,0 +1,197 @@
+{
+  "version": "1.0",
+  "renderer": "hyperframes",
+  "aspect": "9:16",
+  "metadata": {
+    "title": "Năm phương pháp học tập nhanh (motion)",
+    "source": {
+      "url": "",
+      "domain": "",
+      "image": null
+    },
+    "channel": "Vanhhehe"
+  },
+  "voice": {
+    "provider": "vieneu",
+    "speed": 1.0
+  },
+  "music": {
+    "file": "assets/music/default.mp3",
+    "volume": 0.18,
+    "fadeOutSec": 3
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "type": "hook",
+      "voiceText": "Bạn học năm tiếng mỗi ngày nhưng hôm sau quên gần hết? Vấn đề không nằm ở trí nhớ, mà ở cách bạn đang học.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "title",
+        "icon": "😩",
+        "headline": "Học nhiều mà *vẫn quên?*",
+        "label": "Vấn đề nằm ở cách học",
+        "tone": "dark"
+      }
+    },
+    {
+      "id": "myth",
+      "type": "body",
+      "voiceText": "Đọc đi đọc lại và tô đậm sách là cách phổ biến nhất, nhưng nghiên cứu cho thấy đó lại là cách kém hiệu quả nhất. Nó chỉ tạo cảm giác mình đã hiểu.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "compare",
+        "headline": "Cách học nào *hiệu quả?*",
+        "left": {
+          "icon": "🖍️",
+          "title": "Tô đậm sách",
+          "text": "Chỉ tạo cảm giác đã hiểu"
+        },
+        "right": {
+          "icon": "🧠",
+          "title": "Tự kiểm tra",
+          "text": "Nhớ sâu và lâu hơn"
+        },
+        "tone": "red"
+      }
+    },
+    {
+      "id": "m1",
+      "type": "body",
+      "voiceText": "Cách một là Pomodoro. Học tập trung hai mươi lăm phút, tắt điện thoại, rồi nghỉ năm phút. Não bộ giữ được sự tập trung cao mà không bị kiệt sức.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "number",
+        "kicker": "Cách 1 · Pomodoro",
+        "number": "25",
+        "unit": "phút",
+        "percent": 83,
+        "headline": "Tập trung *tuyệt đối*",
+        "label": "rồi nghỉ 5 phút",
+        "tone": "blue"
+      }
+    },
+    {
+      "id": "m2",
+      "type": "body",
+      "voiceText": "Cách hai là tự kiểm tra. Gấp sách lại và tự hỏi mình vừa học gì. Mỗi lần cố nhớ lại là một lần ký ức được khắc sâu hơn.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "title",
+        "kicker": "Cách 2",
+        "icon": "🧠",
+        "headline": "Gấp sách, *tự hỏi lại*",
+        "label": "Mỗi lần nhớ lại là một lần khắc sâu",
+        "tone": "purple"
+      }
+    },
+    {
+      "id": "m3",
+      "type": "body",
+      "voiceText": "Cách ba là ôn ngắt quãng. Ôn lại sau một ngày, ba ngày, rồi một tuần. Mỗi lần ôn đúng lúc sắp quên, kiến thức sẽ ở lại lâu hơn rất nhiều.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "list",
+        "kicker": "Cách 3 · Ôn ngắt quãng",
+        "headline": "Ôn đúng lúc *sắp quên*",
+        "items": [
+          {
+            "icon": "1️⃣",
+            "text": "Sau 1 ngày"
+          },
+          {
+            "icon": "3️⃣",
+            "text": "Sau 3 ngày"
+          },
+          {
+            "icon": "📅",
+            "text": "Sau 1 tuần"
+          }
+        ],
+        "tone": "green"
+      }
+    },
+    {
+      "id": "m4",
+      "type": "body",
+      "voiceText": "Cách bốn là phương pháp Feynman. Hãy giảng lại bài học cho một đứa trẻ mười tuổi hiểu. Chỗ nào bạn giảng không trôi, đó chính là chỗ bạn chưa thật sự hiểu.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "title",
+        "kicker": "Cách 4 · Feynman",
+        "icon": "👨‍🏫",
+        "headline": "Giảng lại *thật đơn giản*",
+        "label": "Như dạy một đứa trẻ 10 tuổi",
+        "tone": "warm"
+      }
+    },
+    {
+      "id": "m5",
+      "type": "body",
+      "voiceText": "Cách năm là ngủ đủ giấc. Trong lúc ngủ, não sắp xếp và lưu lại những gì bạn học ban ngày. Thức trắng ôn thi chỉ khiến bạn quên nhanh hơn.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "number",
+        "kicker": "Cách 5",
+        "number": "8",
+        "unit": "tiếng",
+        "percent": 100,
+        "headline": "Ngủ đủ để *nhớ lâu*",
+        "label": "Não sắp xếp kiến thức khi bạn ngủ",
+        "tone": "blue"
+      }
+    },
+    {
+      "id": "combo",
+      "type": "body",
+      "voiceText": "Kết hợp cả năm cách, bạn có thể học ít giờ hơn mà nhớ lâu hơn gấp nhiều lần. Học thông minh luôn thắng học chăm chỉ một cách mù quáng.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "list",
+        "headline": "5 cách *học nhanh*",
+        "items": [
+          {
+            "icon": "⏱️",
+            "text": "Pomodoro"
+          },
+          {
+            "icon": "🧠",
+            "text": "Tự kiểm tra"
+          },
+          {
+            "icon": "📅",
+            "text": "Ôn ngắt quãng"
+          },
+          {
+            "icon": "👨‍🏫",
+            "text": "Feynman + ngủ đủ"
+          }
+        ],
+        "tone": "purple"
+      }
+    },
+    {
+      "id": "start",
+      "type": "body",
+      "voiceText": "Tối nay, hãy thử ngay một vòng Pomodoro và tự kiểm tra lại bài vừa học. Chỉ cần một tuần, bạn sẽ thấy sự khác biệt.",
+      "templateId": "frame-motion",
+      "inputs": {
+        "kind": "quote",
+        "headline": "Học *thông minh* thắng học chăm",
+        "label": "Thử ngay 1 vòng Pomodoro tối nay",
+        "tone": "warm"
+      }
+    },
+    {
+      "id": "outro",
+      "type": "outro",
+      "voiceText": "Lưu video này lại và gửi cho người bạn đang ôn thi nhé.",
+      "templateId": "frame-logo-outro",
+      "inputs": {
+        "brand_name": "Vanhhehe",
+        "tagline": "Học ít hơn, nhớ lâu hơn",
+        "primary_url": ""
+      }
+    }
+  ]
+}

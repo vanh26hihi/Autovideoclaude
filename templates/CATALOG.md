@@ -19,6 +19,31 @@ Render aspect is set once per script (`"aspect": "9:16"` for TikTok/Shorts).
 
 ---
 
+## frame-motion
+
+**Role:** body or hook for **motion-graphics** videos (no photos, no stock footage):
+everything is drawn and animated in code with a GSAP timeline: kinetic headline
+(words rise out of masks, `*phrase*` gets a marker sweep), counters, icon lists,
+A-vs-B cards, drifting glow + grid background. Build → breathe → resolve; the
+pipeline stretches it to the scene length, so it never freezes. 16:9 and 9:16.
+**Best for:** knowledge, tips, lists, numbers, comparisons ("5 cách…", "25 phút", "A hay B").
+
+| slot       | type     | limit       | notes                                                                      |
+| ---------- | -------- | ----------- | -------------------------------------------------------------------------- |
+| `kind`     | string   | enum        | `title` (icon + headline) · `number` (counter + unit + bar) · `list` (2–4 rows) · `compare` (two cards + VS) · `quote` |
+| `headline` | string   | ≤7 words    | main line; wrap `*a phrase*` for the marker highlight                       |
+| `kicker`   | string   | ≤20         | pill on top (e.g. "Cách 1 · Pomodoro"); also the faint giant background word |
+| `label`    | string   | ≤12 words   | small supporting line under everything (optional)                          |
+| `icon`     | string   | 1 emoji     | `title`: big icon that pops in and floats                                  |
+| `number`   | string   | digits      | `number`: counts up from 0 (e.g. "25", "2,5")                              |
+| `unit`     | string   | ≤8          | `number`: word after the number (e.g. "phút", "%")                         |
+| `percent`  | number   | 0–100       | `number`: how full the progress bar gets (default 100)                     |
+| `items`    | object[] | 2–4         | `list`: `{ "icon": "⏱️", "text": "Pomodoro" }`, text ≤4 words              |
+| `left` / `right` | object | —       | `compare`: `{ "icon", "title" (≤3 words), "text" (≤6 words) }`; left = the wrong/old way (struck through), right = the better way |
+| `tone`     | string   | enum        | `blue` · `warm` · `green` · `purple` · `red` · `dark` — change it between scenes |
+
+---
+
 ## frame-visual-full
 
 **Role:** body (default) or hook. The visual fills ~85% of the frame: either a

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>Motion · Landscape 16:9</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;800;900&family=Anton&display=swap" rel="stylesheet" />
+<style>
+  /*
+   * frame-motion — motion-graphics scene: no photo, everything is drawn and
+   * animated in code (GSAP timeline): kinetic headline, counters, icon lists,
+   * A-vs-B cards. Motion follows build → breathe → resolve, eases vary per
+   * element (expo / back / power), entrances longer than exits.
+   * Slots: kind (title | number | list | compare | quote), kicker, headline
+   * (*word* = marker highlight), icon, number, unit, label, items[{icon,text}],
+   * left/right {icon,title,text}, tone.
+   */
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #070a16; }
+  * { box-sizing: border-box; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    font-family: 'Be Vietnam Pro', sans-serif; color: #f5f7ff; background: var(--bg); }
+
+  .tone-blue   { --bg:#071029; --a1:#3d7bff; --a2:#22d3ee; --hi:#ffd43b; }
+  .tone-warm   { --bg:#1c0a05; --a1:#ff7a2f; --a2:#ffb347; --hi:#fff1a8; }
+  .tone-green  { --bg:#04170f; --a1:#1fd28b; --a2:#a3f75c; --hi:#ffe066; }
+  .tone-purple { --bg:#12062a; --a1:#9b5cff; --a2:#ff5ccf; --hi:#ffe066; }
+  .tone-red    { --bg:#1d0408; --a1:#ff3d5a; --a2:#ff9f43; --hi:#fff1a8; }
+  .tone-dark   { --bg:#0a0b10; --a1:#f5b81c; --a2:#6ee7ff; --hi:#f5b81c; }
+
+  /* ── background layers: glow blobs, hairline grid, oversized ghost text ── */
+  /* soft glows as radial gradients: a CSS blur() filter repaints every frame and makes capture ~10x slower */
+  .blob { position: absolute; border-radius: 50%; }
+  .blob.b1 { width: 1300px; height: 1300px; left: -560px; top: -500px; opacity: 0.6;
+    background: radial-gradient(circle, var(--a1) 0%, transparent 65%); }
+  .blob.b2 { width: 1100px; height: 1100px; right: -480px; bottom: -420px; opacity: 0.4;
+    background: radial-gradient(circle, var(--a2) 0%, transparent 65%); }
+  .grid { position: absolute; inset: 0; opacity: 0.12;
+    background-image: linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size: 120px 120px; }
+  .ghost { position: absolute; left: -40px; bottom: 6%; font-family: 'Anton', sans-serif;
+    font-size: 420px; line-height: 0.8; color: rgba(255,255,255,0.045); white-space: nowrap;
+    text-transform: uppercase; letter-spacing: 6px; }
+  .rule { position: absolute; left: 90px; right: 90px; height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--a1), var(--a2)); transform-origin: left center; }
+  .rule.top { top: 80px; }
+  .ring { position: absolute; width: 520px; height: 520px; right: -140px; top: 12%;
+    border: 3px dashed rgba(255,255,255,0.18); border-radius: 50%; }
+
+  /* ── content stage: fills the frame, padding positions content ── */
+  .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+    padding: 110px 160px; gap: 40px; }
+  .kicker { align-self: flex-start; font-weight: 900; font-size: 34px; letter-spacing: 6px; text-transform: uppercase;
+    color: #0b0f1e; background: var(--hi); padding: 12px 30px; border-radius: 999px; }
+  .headline { font-weight: 900; font-size: 104px; line-height: 1.12; letter-spacing: -1px; }
+  .headline .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0.04em 0.12em; margin-bottom: -0.12em; }
+  .headline .w > span { display: inline-block; position: relative; z-index: 0; }
+  .headline .hl > span { padding: 0 0.14em; }
+  .headline .hl > span::before { content: ""; position: absolute; inset: 0.08em 0 0.02em; z-index: -1;
+    background: var(--hi); border-radius: 10px; transform: scaleX(var(--mark, 1)); transform-origin: left center; }
+  .label { font-weight: 600; font-size: 46px; line-height: 1.35; color: rgba(245,247,255,0.82); max-width: 92%; }
+
+  .hero-icon { font-family: 'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;
+    font-size: 220px; line-height: 1; align-self: flex-start; }
+
+  /* number */
+  .num-row { display: flex; align-items: baseline; gap: 26px; }
+  .num { font-family: 'Anton', sans-serif; font-size: 300px; line-height: 0.9;
+    background: linear-gradient(180deg, #fff 30%, var(--a2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .unit { font-weight: 900; font-size: 96px; color: var(--hi); text-transform: uppercase; }
+  .bar { height: 26px; border-radius: 13px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 100%; border-radius: 13px;
+    background: linear-gradient(90deg, var(--a1), var(--a2)); transform-origin: left center; }
+
+  /* list */
+  .items { display: flex; flex-direction: column; gap: 28px; }
+  .item { display: flex; align-items: center; gap: 30px; padding: 26px 34px; border-radius: 28px;
+    background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.12); }
+  .item .ic { font-family: 'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif; font-size: 84px; line-height: 1;
+    width: 120px; height: 120px; display: grid; place-items: center; border-radius: 26px;
+    background: linear-gradient(135deg, var(--a1), var(--a2)); flex: none; }
+  .item .tx { font-weight: 800; font-size: 48px; line-height: 1.2; }
+  .item .n { font-family: 'Anton', sans-serif; font-size: 64px; color: var(--hi); width: 60px; flex: none; }
+
+  /* compare */
+  .cards { display: flex; flex-direction: row; gap: 40px; align-items: stretch; position: relative; }
+  .card { flex: 1; padding: 44px 40px; border-radius: 36px; display: flex; flex-direction: column; gap: 18px;
+    background: rgba(255,255,255,0.07); border: 3px solid rgba(255,255,255,0.14); }
+  .card.right { border-color: var(--a2); background: rgba(255,255,255,0.11); }
+  .card .ic { font-family: 'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif; font-size: 120px; line-height: 1; }
+  .card .t { font-weight: 900; font-size: 60px; }
+  .card.left .t { color: rgba(245,247,255,0.7); text-decoration: line-through; text-decoration-color: var(--a1); text-decoration-thickness: 6px; }
+  .card.right .t { color: var(--hi); }
+  .card .d { font-weight: 600; font-size: 40px; line-height: 1.3; color: rgba(245,247,255,0.8); }
+  .vs { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center;
+    font-family: 'Anton', sans-serif; font-size: 70px; color: #0b0f1e; background: var(--hi);
+    box-shadow: 0 0 0 14px rgba(0,0,0,0.35); }
+
+  /* quote */
+  .qmark { font-family: 'Anton', sans-serif; font-size: 360px; line-height: 0.6; color: var(--a1); height: 160px; }
+
+  /* own compositor layers: moving glows/rings must not force the big emoji glyphs to re-rasterise every frame */
+  .blob, .ring, .ghost, .rule, .hero-icon, .item, .card, .vs, .num-row { will-change: transform; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="root" class="tone-blue" data-composition-id="main" data-start="0" data-duration="7"
+  data-width="1920" data-height="1080"
+  data-composition-variables='{"kind":"title","kicker":"Cách 1","headline":"Học *thông minh* hơn","icon":"🧠","number":"","unit":"","label":"","items":[],"left":{},"right":{},"tone":"blue"}'>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="grid"></div>
+  <div class="ring"></div>
+  <div class="ghost"></div>
+  <div class="rule top"></div>
+
+  <div class="stage">
+    <div class="kicker" hidden></div>
+    <div class="hero-icon" hidden></div>
+    <div class="qmark" hidden>“</div>
+    <div class="num-row" hidden><div class="num"></div><div class="unit"></div></div>
+    <div class="headline"></div>
+    <div class="bar" hidden><i></i></div>
+    <div class="items" hidden></div>
+    <div class="cards" hidden>
+      <div class="card left"><div class="ic"></div><div class="t"></div><div class="d"></div></div>
+      <div class="card right"><div class="ic"></div><div class="t"></div><div class="d"></div></div>
+      <div class="vs">VS</div>
+    </div>
+    <div class="label" hidden></div>
+  </div>
+</div>
+<script src="assets/gsap.min.js"></script>
+<script>
+(function () {
+  var v = window.__hyperframes && typeof window.__hyperframes.getVariables === "function"
+    ? window.__hyperframes.getVariables() : {};
+  var root = document.getElementById("root");
+  var $ = function (s) { return root.querySelector(s); };
+  var tones = ["blue", "warm", "green", "purple", "red", "dark"];
+  root.className = "tone-" + (tones.indexOf(v.tone) >= 0 ? v.tone : "blue");
+  var kind = ["title", "number", "list", "compare", "quote"].indexOf(v.kind) >= 0 ? v.kind : "title";
+  var DUR = parseFloat(root.getAttribute("data-duration")) || 7;
+  var show = function (el) { el.hidden = false; return el; };
+  var txt = function (x) { return x == null ? "" : String(x); };
+
+  // headline: one masked span per word; *phrase* → highlighted with a marker sweep
+  var head = $(".headline");
+  txt(v.headline).split(/(\*[^*]+\*)/).forEach(function (part) {
+    if (!part) return;
+    var hl = /^\*[^*]+\*$/.test(part);
+    // a highlighted phrase stays one unit so the marker runs under it in one sweep
+    (hl ? [part.slice(1, -1)] : part.split(/\s+/)).filter(Boolean).forEach(function (word) {
+      var w = document.createElement("span"); w.className = "w" + (hl ? " hl" : "");
+      var s = document.createElement("span"); s.textContent = word; w.appendChild(s);
+      head.appendChild(w); head.appendChild(document.createTextNode(" "));
+    });
+  });
+  if (!head.textContent.trim()) head.hidden = true;
+  if (v.kicker) show($(".kicker")).textContent = txt(v.kicker);
+  if (v.label) show($(".label")).textContent = txt(v.label);
+  $(".ghost").textContent = txt(v.ghost || v.number || v.kicker || "");
+
+  var tl = gsap.timeline({ paused: true });
+  var t0 = 0.15; // never start at t=0
+
+  // background: rule draws in, blobs and ring drift for the whole scene (ambient)
+  tl.from(".rule", { scaleX: 0, duration: 0.9, ease: "expo.out" }, t0);
+  tl.fromTo(".b1", { x: 0, y: 0 }, { x: 160, y: 120, duration: DUR, ease: "sine.inOut" }, 0);
+  tl.fromTo(".b2", { x: 0, y: 0 }, { x: -140, y: -100, duration: DUR, ease: "sine.inOut" }, 0);
+  tl.fromTo(".ring", { rotation: 0 }, { rotation: 40, duration: DUR, ease: "none" }, 0);
+  tl.fromTo(".ghost", { x: 0 }, { x: -220, duration: DUR, ease: "none" }, 0);
+  tl.from(".grid", { opacity: 0, duration: 1.2, ease: "power1.out" }, 0);
+
+  if (v.kicker) tl.from(".kicker", { x: -80, opacity: 0, duration: 0.45, ease: "back.out(2)" }, t0 + 0.05);
+
+  var words = root.querySelectorAll(".headline .w > span");
+  var headAt = t0 + 0.25;
+
+  if (kind === "title" && v.icon) {
+    show($(".hero-icon")).textContent = txt(v.icon);
+    tl.from(".hero-icon", { scale: 0, rotation: -25, duration: 0.8, ease: "elastic.out(1, 0.5)" }, t0 + 0.1);
+    tl.to(".hero-icon", { y: -24, duration: 1.6, ease: "sine.inOut", yoyo: true, repeat: Math.max(0, Math.floor((DUR - 1.2) / 1.6) - 1) }, 1.1);
+    headAt = t0 + 0.45;
+  }
+
+  if (kind === "quote") {
+    show($(".qmark"));
+    tl.from(".qmark", { scale: 2.2, opacity: 0, duration: 0.6, ease: "expo.out" }, t0);
+    headAt = t0 + 0.35;
+  }
+
+  if (kind === "number") {
+    var row = show($(".num-row"));
+    var target = parseFloat(String(v.number).replace(",", ".")) || 0;
+    var dec = (String(v.number).split(/[.,]/)[1] || "").length;
+    var numEl = $(".num"), counter = { n: 0 };
+    numEl.textContent = txt(v.number);
+    $(".unit").textContent = txt(v.unit);
+    tl.from(row, { y: 60, opacity: 0, duration: 0.5, ease: "power4.out" }, t0);
+    tl.to(counter, { n: target, duration: 1.4, ease: "expo.out",
+      onUpdate: function () { numEl.textContent = counter.n.toFixed(dec).replace(".", ","); } }, t0);
+    tl.from(".unit", { x: 60, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, t0 + 0.9);
+    var pct = Math.max(0.08, Math.min(1, parseFloat(v.percent) / 100 || 1));
+    show($(".bar"));
+    tl.fromTo(".bar > i", { scaleX: 0 }, { scaleX: pct, duration: 1.6, ease: "power2.inOut" }, t0 + 0.4);
+    headAt = t0 + 0.7;
+  }
+
+  if (words.length) {
+    tl.from(words, { yPercent: 115, duration: 0.7, ease: "expo.out", stagger: Math.min(0.09, 0.5 / words.length) }, headAt);
+    var marks = root.querySelectorAll(".headline .hl > span");
+    if (marks.length) {
+      tl.fromTo(marks, { "--mark": 0 }, { "--mark": 1, duration: 0.5, ease: "power3.inOut", stagger: 0.08 }, headAt + 0.55);
+      tl.to(marks, { color: "#0b0f1e", duration: 0.25, ease: "none", stagger: 0.08 }, headAt + 0.75);
+    }
+  }
+
+  var after = headAt + 0.5 + words.length * 0.05;
+
+  if (kind === "list") {
+    var box = show($(".items"));
+    (Array.isArray(v.items) ? v.items : []).slice(0, 4).forEach(function (it, i) {
+      var row = document.createElement("div"); row.className = "item";
+      var ic = document.createElement("div"); ic.className = "ic"; ic.textContent = txt(it.icon || "•");
+      var tx = document.createElement("div"); tx.className = "tx"; tx.textContent = txt(it.text);
+      row.appendChild(ic); row.appendChild(tx); box.appendChild(row);
+    });
+    tl.from(".item", { x: -120, opacity: 0, duration: 0.55, ease: "back.out(1.6)", stagger: 0.32 }, after);
+    tl.from(".item .ic", { scale: 0, rotation: -40, duration: 0.5, ease: "back.out(3)", stagger: 0.32 }, after + 0.12);
+  }
+
+  if (kind === "compare") {
+    show($(".cards"));
+    ["left", "right"].forEach(function (side) {
+      var d = v[side] || {}, c = $(".card." + side);
+      c.querySelector(".ic").textContent = txt(d.icon);
+      c.querySelector(".t").textContent = txt(d.title);
+      c.querySelector(".d").textContent = txt(d.text);
+    });
+    var horiz = 1920 > 1080;
+    var ent = function (d) { return Object.assign(horiz ? { x: 200 * d } : { y: 120 * d }, { opacity: 0, duration: 0.6, ease: "power4.out" }); };
+    tl.from(".card.left", ent(-1), after);
+    tl.from(".card.right", ent(1), after + 0.5);
+    tl.from(".vs", { scale: 0, rotation: 180, duration: 0.6, ease: "back.out(2.5)" }, after + 0.35);
+    tl.to(".card.right", { scale: 1.03, duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 1 }, after + 1.4);
+  }
+
+  if (v.label) tl.from(".label", { opacity: 0, y: 24, duration: 0.6, ease: "power2.out" }, after + 0.2);
+
+  // resolve: quick exit so the hard cut to the next scene feels intentional
+  var out = Math.max(after + 1.2, DUR - 0.3);
+  tl.to(".stage", { scale: 0.96, opacity: 0, duration: 0.25, ease: "power2.in" }, out);
+  tl.set({}, {}, DUR);
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+})();
+</script>
+</body>
+</html>
