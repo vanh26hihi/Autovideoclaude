@@ -68,7 +68,7 @@ export const TimeMath: React.FC = () => {
   );
   return (
     <Background>
-      <Sfx name="ding" at={210} volume={0.4} />
+      <Sfx name="ding" at={210} volume={0.35} />
       <div style={{ display: "flex", alignItems: "center", gap: 100 }}>
         <PhoneFeed />
         <div style={{ width: 1100 }}>
@@ -174,7 +174,7 @@ export const Solutions: React.FC = () => {
   return (
     <Background tint="#13331f">
       {tips.map((t, i) => (
-        <Sfx key={t} name="pop" at={75 + i * 70} volume={0.4} />
+        <Sfx key={t} name="pop" at={75 + i * 70} volume={0.35} />
       ))}
       <div style={{ width: 1400 }}>
         <Reveal>

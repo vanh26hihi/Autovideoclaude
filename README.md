@@ -44,6 +44,15 @@ python3 scripts/make-audio.py   # cần numpy và ffmpeg
 
 Muốn dùng nhạc khác thì chỉ cần thay file `public/audio/music.mp3`.
 
+Giọng đọc tiếng Việt (`public/audio/vo-1.mp3` đến `vo-6.mp3`, mỗi file một cảnh) được tạo bằng eSpeak NG. Sửa lời đọc trong `scripts/make-voiceover.py` rồi chạy:
+
+```bash
+python3 -m pip install espeakng-loader
+python3 scripts/make-voiceover.py
+```
+
+Muốn giọng tự nhiên hơn, thay các file `vo-*.mp3` bằng bản ghi âm hoặc giọng AI khác, giữ nguyên tên file.
+
 ## Cấu trúc
 
 ```
@@ -57,7 +66,8 @@ src/
     theme.ts              # màu sắc, font
     common.tsx            # nền, hiệu ứng xuất hiện, phát hiệu ứng âm thanh
 public/audio/     # nhạc nền và hiệu ứng âm thanh
-scripts/make-audio.py     # tạo các file âm thanh trên
+scripts/make-audio.py      # tạo nhạc nền và hiệu ứng âm thanh
+scripts/make-voiceover.py  # tạo giọng đọc
 remotion.config.ts
 ```
 

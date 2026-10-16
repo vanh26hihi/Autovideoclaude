@@ -43,7 +43,7 @@ export const Reveal: React.FC<{ delay?: number; children: React.ReactNode; style
 export const Sfx: React.FC<{ name: "pop" | "whoosh" | "ding"; at: number; volume?: number }> = ({
   name,
   at,
-  volume = 0.5,
+  volume = 0.4,
 }) => (
   <Sequence from={at} durationInFrames={30} layout="none">
     <Audio src={staticFile(`audio/${name}.mp3`)} volume={volume} />
