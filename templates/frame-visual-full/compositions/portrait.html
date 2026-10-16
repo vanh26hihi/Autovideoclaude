@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=1080, height=1920" />
 <title>Visual Full · Portrait 9:16</title>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;800;900&family=Anton&display=swap" rel="stylesheet" />
 <style>
   /*
    * frame-visual-full — image-first scene: the visual fills ~85% of the frame,
@@ -66,6 +66,21 @@
     font-weight: 900; font-size: 76px; line-height: 1.25; text-shadow: 0 6px 24px rgba(0,0,0,0.7);
     opacity: 0; transform: translateY(24px); animation: up 0.7s cubic-bezier(0.16,1,0.3,1) 0.9s forwards; }
   .caption b { color: var(--acc); }
+
+  /* kinetic concept term: a big English keyword + small translation, centred */
+  .term-wrap { position: absolute; left: 0; right: 0; top: 42%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
+    padding: 0 70px; }
+  .term-wrap::before { content: ""; position: absolute; inset: -40% -10%; z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, transparent 70%); }
+  .term { font-family: 'Anton', 'Be Vietnam Pro', sans-serif; font-size: 150px; line-height: 1.05;
+    text-transform: uppercase; color: #fff; letter-spacing: 2px;
+    text-shadow: 0 0 28px var(--acc), 0 0 60px rgba(255,255,255,0.25), 0 6px 18px rgba(0,0,0,0.6);
+    opacity: 0; transform: scale(1.25); animation: termIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s forwards; }
+  .term-sub { font-weight: 800; font-size: 40px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--acc); text-shadow: 0 3px 12px rgba(0,0,0,0.7);
+    opacity: 0; animation: fadeIn 0.6s ease-out 0.9s forwards; }
+  @keyframes termIn { to { opacity: 1; transform: scale(1); letter-spacing: 6px; } }
   @keyframes up { to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
@@ -78,6 +93,7 @@
   <div class="stage"></div>
   <div class="shade"></div>
   <div class="kicker" hidden></div>
+  <div class="term-wrap" hidden><div class="term"></div><div class="term-sub"></div></div>
   <div class="caption"></div>
 </div>
 <script>
@@ -97,6 +113,15 @@
   });
   if (v.kicker) { var k = document.querySelector(".kicker"); k.textContent = v.kicker; k.hidden = false; }
 
+  var hasTerm = !!v.term;
+  if (hasTerm) {
+    var tw = document.querySelector(".term-wrap");
+    tw.querySelector(".term").textContent = String(v.term);
+    tw.querySelector(".term-sub").textContent = v.term_sub ? String(v.term_sub) : "";
+    tw.hidden = false;
+  }
+  if (!v.caption) document.querySelector(".shade").style.opacity = v.image ? "0.7" : "0";
+
   var stage = document.querySelector(".stage");
   var glow = document.querySelector(".glow");
   if (v.image) {
@@ -111,6 +136,7 @@
     return;
   }
 
+  if (hasTerm) return; // the term is the visual when there is no photo
   var icons = Array.isArray(v.icons) ? v.icons.slice(0, 3) : (v.icons ? [String(v.icons)] : []);
   if (!icons.length) return;
   var labels = Array.isArray(v.labels) ? v.labels : [];

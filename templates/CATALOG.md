@@ -37,6 +37,8 @@ Renders 7 s of motion, so it stays alive for long narration.
 | `labels`  | string[] | ≤10 each    | label under each icon (handy for `vs`)                                      |
 | `caption` | string   | ≤8 words    | bottom caption; wrap `*a word*` to highlight it                             |
 | `kicker`  | string   | ≤16         | small pill on top (optional, e.g. "Mẹo 1")                                  |
+| `term`    | string   | ≤24         | big glowing concept word, centred (e.g. "Sense of urgency"); replaces icons |
+| `term_sub`| string   | ≤32         | small translation under `term` (e.g. "Cảm giác cấp bách")                  |
 | `tone`    | string   | enum        | `blue` · `warm` · `green` · `purple` · `red` · `dark` (background colour)   |
 
 ---

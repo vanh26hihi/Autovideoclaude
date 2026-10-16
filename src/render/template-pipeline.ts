@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rm, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import pLimit from "p-limit";
@@ -15,7 +15,8 @@ import {
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
 import { composeTemplate } from "./template-composer.js";
 import { autoFindSceneImage, inlineSceneImage } from "../assets/image-inline.js";
-import { fitClipToDuration, concatVideos, muxAudioOntoVideo } from "./video-tools.js";
+import { fitClipToDuration, concatVideos, muxAudioOntoVideo, finishVideo } from "./video-tools.js";
+import { detectSpeechSegments, estimateWordTimings, writeKaraokeAss, DEFAULT_KARAOKE, type WordTiming } from "./karaoke.js";
 import { log } from "../utils/logger.js";
 
 const TOTAL_STEPS = 8;
@@ -182,6 +183,48 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
   const silentVideo = join(outputDir, "video-silent.mp4");
   const videoPath = join(outputDir, "video.mp4");
   await concatVideos(fittedClips, silentVideo);
+
+  // Optional finishing pass: film look + word-by-word karaoke subtitles.
+  const wantSubs = script.subtitles && script.subtitles.style === "karaoke";
+  const look = script.look?.style ?? "none";
+  let videoForMux = silentVideo;
+  if (wantSubs || look !== "none") {
+    const [w, h] = script.aspect === "16:9" ? [1920, 1080] : script.aspect === "1:1" ? [1080, 1080] : [1080, 1920];
+    const fontsSrc = resolve(process.cwd(), "assets", "fonts");
+    await mkdir(join(outputDir, "fonts"), { recursive: true });
+    if (existsSync(join(fontsSrc, "Anton-Regular.ttf"))) {
+      await copyFile(join(fontsSrc, "Anton-Regular.ttf"), join(outputDir, "fonts", "Anton-Regular.ttf"));
+    }
+    let assFile: string | undefined;
+    if (wantSubs) {
+      const words: WordTiming[] = [];
+      for (const a of sceneAudio) {
+        const text = script.scenes.find((sc) => sc.id === a.id)!.voiceText;
+        const speech = await detectSpeechSegments(a.path, a.durationSec);
+        for (const wt of estimateWordTimings(text, speech)) {
+          words.push({ word: wt.word, start: wt.start + sceneStarts[a.id], end: wt.end + sceneStarts[a.id] });
+        }
+      }
+      assFile = "subtitles.ass";
+      await writeKaraokeAss(join(outputDir, assFile), words, w, h, {
+        ...DEFAULT_KARAOKE,
+        wordsPerLine: script.subtitles!.wordsPerLine,
+        activeColor: script.subtitles!.activeColor,
+      });
+      log.info(`  karaoke subtitles: ${words.length} words → ${join(outputDir, assFile)}`);
+    }
+    videoForMux = join(outputDir, "video-styled.mp4");
+    await finishVideo(silentVideo, videoForMux, h, {
+      cwd: outputDir,
+      assFile,
+      fontsDir: "fonts",
+      stampFont: "fonts/Anton-Regular.ttf",
+      look,
+      stamp: script.look?.stamp ?? "",
+      fps: RENDER_FPS,
+    });
+    log.info(`  finishing: look=${look}${assFile ? " + karaoke" : ""}`);
+  }
   // Background music goes only into the final video; voice.mp3 stays narration + SFX for CapCut.
   let finalAudio = voiceMp3;
   const music = resolveMusic(script);
@@ -191,7 +234,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
     await mixMusicUnderVoice(voiceMp3, music.path, finalAudio, { ...music, durationSec: videoDur });
     log.info(`  music: ${music.path} (volume ${music.volume})`);
   }
-  await muxAudioOntoVideo(silentVideo, finalAudio, videoPath);
+  await muxAudioOntoVideo(videoForMux, finalAudio, videoPath);
 
   // STEP 8 — done
   log.step(8, TOTAL_STEPS, "Done");
