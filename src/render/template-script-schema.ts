@@ -42,7 +42,7 @@ export const TemplateScriptSchema = z.object({
     channel: z.string().min(1),
   }),
   voice: z.object({
-    provider: z.literal("omnivoice").default("omnivoice"),
+    provider: z.enum(["vieneu", "omnivoice"]).default("vieneu"),
     speed: z.number().min(0.5).max(2.0),
   }),
   /** Output aspect for every scene (templates render a matching composition). */

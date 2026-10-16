@@ -34,7 +34,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
   log.info(`Output directory: ${outputDir}`);
 
   // STEP 1 — load + validate
-  log.step(1, TOTAL_STEPS, `Load + validate template script (TTS: ${cfg.ttsProvider})`);
+  log.step(1, TOTAL_STEPS, `Load + validate template script (TTS: ${cfg.ttsProvider === "vieneu" ? `vieneu · ${cfg.vieneuVoice}` : cfg.ttsProvider})`);
   const raw = JSON.parse(await readFile(scriptPath, "utf8"));
   const script: TemplateScript = TemplateScriptSchema.parse(raw);
 
