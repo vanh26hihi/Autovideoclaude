@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import nock from "nock";
-import { searchImage, queryVariants } from "./image-search.js";
+import { searchImage, queryVariants, searchTiming } from "./image-search.js";
+
+searchTiming.gapMs = 0;
+searchTiming.retryMs = [1, 1];
 
 beforeEach(() => {
   nock.cleanAll();
@@ -34,6 +37,21 @@ describe("searchImage", () => {
     expect(queryVariants("tired man yawning at desk")).toEqual([
       "tired man yawning at desk", "tired man yawning desk", "tired man yawning", "tired man",
     ]);
+  });
+
+  it("retries Pixabay on 429 and never falls back to Wikimedia with a key", async () => {
+    process.env.PIXABAY_API_KEY = "k";
+    nock("https://pixabay.com").get("/api/").query(true).reply(429);
+    nock("https://pixabay.com").get("/api/").query(true)
+      .reply(200, { hits: [{ largeImageURL: "https://px/b.jpg", user: "Cy" }] });
+    expect((await searchImage("brain science"))?.url).toBe("https://px/b.jpg");
+  });
+
+  it("gives up (icons) instead of using Wikimedia when the stock API keeps failing", async () => {
+    process.env.PIXABAY_API_KEY = "k";
+    nock("https://pixabay.com").get("/api/").query(true).times(3).reply(429);
+    expect(await searchImage("phone bed")).toBeNull();
+    expect(nock.isDone()).toBe(true);
   });
 
   it("returns null when nothing matches", async () => {

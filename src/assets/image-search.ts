@@ -128,20 +128,47 @@ export function queryVariants(query: string): string[] {
 /**
  * Find a real photo for `query` (English keywords work best). Tries Pexels and
  * Pixabay when their free API keys are set (recommended: stock photos that
- * match the topic), then key-less Wikimedia Commons with shorter queries. `pick` chooses among the results (0 = best match).
+ * match the topic). Only without any key does it use Wikimedia Commons, with
+ * shorter queries. 429s are retried with back-off. `pick` chooses among the results (0 = best match).
  * Returns null when nothing is found — the template then falls back to icons.
  */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Pause between stock-API calls; overridable for tests. */
+export const searchTiming = { gapMs: 1200, retryMs: [3000, 8000, 20000] };
+let lastCall = 0;
+
+/** Call a stock API politely: ~1 s apart, and back off on 429 (rate limit / Cloudflare). */
+async function politely<T>(name: string, call: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    const wait = lastCall + searchTiming.gapMs - Date.now();
+    if (wait > 0) await sleep(wait);
+    lastCall = Date.now();
+    try {
+      return await call();
+    } catch (e: any) {
+      const delay = searchTiming.retryMs[attempt];
+      if (e.response?.status !== 429 || delay === undefined) throw e;
+      log.info(`  image search ${name}: 429, retrying in ${delay / 1000}s`);
+      await sleep(delay);
+    }
+  }
+}
+
 export async function searchImage(
   query: string,
   orientation: Orientation = "portrait",
   pick = 0,
 ): Promise<ImageHit | null> {
+  // With a stock key, never fall back to Wikimedia: it matches file names, so
+  // its photos are often off-topic — better keep the icons than a wrong photo.
+  const hasStockKey = Boolean(process.env.PEXELS_API_KEY || process.env.PIXABAY_API_KEY);
   for (const [name, fn] of PROVIDERS) {
+    if (name === "wikimedia" && hasStockKey) break;
     // Stock APIs handle full phrases; Wikimedia matches every word, so retry shorter.
     const variants = name === "wikimedia" ? queryVariants(query) : [query.trim()];
     for (const q of variants) {
       try {
-        const hits = (await fn(q, orientation)).filter((h) => h.url);
+        const hits = (await politely(name, () => fn(q, orientation))).filter((h) => h.url);
         if (hits.length) return hits[Math.min(pick, hits.length - 1)];
       } catch (e: any) {
         log.info(`  image search ${name}: ${e.response?.status ?? e.message ?? e}`);
