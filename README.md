@@ -34,6 +34,16 @@ npx remotion render HelloVideo out/custom.mp4 --props='{"title":"Xin chào","sub
 
 Nếu máy không tải được Chrome Headless Shell, chỉ định trình duyệt có sẵn bằng `--browser-executable=/đường/dẫn/tới/chrome`.
 
+## Âm thanh
+
+Nhạc nền và hiệu ứng âm thanh (`public/audio/*.mp3`) được tổng hợp bằng code, không dính bản quyền. Muốn tạo lại hoặc chỉnh nhạc:
+
+```bash
+python3 scripts/make-audio.py   # cần numpy và ffmpeg
+```
+
+Muốn dùng nhạc khác thì chỉ cần thay file `public/audio/music.mp3`.
+
 ## Cấu trúc
 
 ```
@@ -45,6 +55,9 @@ src/
     scenes.tsx            # 6 cảnh: câu hỏi mở đầu, phép tính thời gian, tác hại, câu hỏi suy ngẫm, giải pháp, kết
     SocialMediaVideo.tsx  # ghép các cảnh với hiệu ứng chuyển mờ, chỉnh thời lượng từng cảnh ở đây
     theme.ts              # màu sắc, font
+    common.tsx            # nền, hiệu ứng xuất hiện, phát hiệu ứng âm thanh
+public/audio/     # nhạc nền và hiệu ứng âm thanh
+scripts/make-audio.py     # tạo các file âm thanh trên
 remotion.config.ts
 ```
 

@@ -1,5 +1,5 @@
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { Background, Reveal } from "./common";
+import { Background, Reveal, Sfx } from "./common";
 import { theme } from "./theme";
 
 export const Hook: React.FC = () => {
@@ -8,6 +8,7 @@ export const Hook: React.FC = () => {
   const pop = spring({ frame: frame - 70, fps, config: { damping: 10 } });
   return (
     <Background>
+      <Sfx name="pop" at={70} />
       <div style={{ textAlign: "center" }}>
         <Reveal>
           <div style={{ fontSize: 48, color: theme.muted, letterSpacing: 6 }}>CÂU HỎI CHO BẠN</div>
@@ -67,6 +68,7 @@ export const TimeMath: React.FC = () => {
   );
   return (
     <Background>
+      <Sfx name="ding" at={210} volume={0.4} />
       <div style={{ display: "flex", alignItems: "center", gap: 100 }}>
         <PhoneFeed />
         <div style={{ width: 1100 }}>
@@ -101,6 +103,9 @@ const effects = [
 export const Effects: React.FC = () => {
   return (
     <Background tint="#3b1b2f">
+      {effects.map((e, i) => (
+        <Sfx key={e.title} name="pop" at={40 + i * 75} />
+      ))}
       <div style={{ width: "100%" }}>
         <Reveal>
           <div style={{ fontSize: 96, fontWeight: 800, textAlign: "center", marginBottom: 70 }}>
@@ -168,6 +173,9 @@ export const Solutions: React.FC = () => {
   const { fps } = useVideoConfig();
   return (
     <Background tint="#13331f">
+      {tips.map((t, i) => (
+        <Sfx key={t} name="pop" at={75 + i * 70} volume={0.4} />
+      ))}
       <div style={{ width: 1400 }}>
         <Reveal>
           <div style={{ fontSize: 96, fontWeight: 800, marginBottom: 60 }}>
