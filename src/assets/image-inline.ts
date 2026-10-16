@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { extname, isAbsolute, join, resolve } from "node:path";
-import { fetchImage } from "./image-fetcher.js";
-import { searchImage, type Orientation } from "./image-search.js";
+import { fetchImage, fetchVideo } from "./image-fetcher.js";
+import { searchImage, searchVideo, type Orientation } from "./image-search.js";
 import { log } from "../utils/logger.js";
 
 const MIME: Record<string, string> = {
@@ -116,4 +116,50 @@ export async function autoFindSceneImage(
   await writeFile(creditFile, credit + "\n", "utf8");
   log.info(`  scene ${sceneId}: photo "${query}" → ${hit.provider} (${hit.credit})`);
   return { inputs: { ...inputs, image: file }, credit: `${sceneId}: ${credit}` };
+}
+
+/**
+ * Find a stock video clip for a scene: `inputs.video` (a local .mp4 path) wins,
+ * otherwise `inputs.video_query` (English keywords) is searched on Pexels/Pixabay
+ * and the clip is downloaded into the cache. `video_pick` picks another result.
+ * Returns the local file + credit, or null (the scene then uses its photo/icons).
+ */
+export async function autoFindSceneVideo(
+  inputs: Record<string, unknown>,
+  orientation: Orientation,
+  sceneId: string,
+  cacheDir: string = IMAGE_CACHE_DIR,
+): Promise<{ file: string; credit?: string } | null> {
+  if (typeof inputs.video === "string" && inputs.video.trim()) {
+    const file = isAbsolute(inputs.video) ? inputs.video : resolve(process.cwd(), inputs.video);
+    if (existsSync(file)) return { file };
+    log.info(`  scene ${sceneId}: video not found (${file}) — skipped`);
+  }
+  const query = inputs.video_query;
+  if (typeof query !== "string" || !query.trim()) return null;
+  const pick = typeof inputs.video_pick === "number" ? inputs.video_pick : 0;
+  const key = createHash("sha1").update(`video|${query.trim().toLowerCase()}|${orientation}|${pick}`).digest("hex").slice(0, 16);
+  const file = join(resolve(cacheDir), `${key}.mp4`);
+  const creditFile = `${file}.txt`;
+
+  if (existsSync(file)) {
+    const credit = existsSync(creditFile) ? (await readFile(creditFile, "utf8")).trim() : "cached";
+    log.info(`  scene ${sceneId}: video "${query}" (cached)`);
+    return { file, credit: `${sceneId}: ${credit}` };
+  }
+
+  const hit = await searchVideo(query.trim(), orientation, pick);
+  if (!hit) {
+    log.info(`  scene ${sceneId}: no video found for "${query}" — using photo/icons`);
+    return null;
+  }
+  const res = await fetchVideo(hit.url, file);
+  if (!res.success) {
+    log.info(`  scene ${sceneId}: video download failed (${res.reason}) — using photo/icons`);
+    return null;
+  }
+  const credit = `${hit.credit} — ${hit.url}`;
+  await writeFile(creditFile, credit + "\n", "utf8");
+  log.info(`  scene ${sceneId}: video "${query}" → ${hit.provider} ${hit.width}x${hit.height} (${hit.credit})`);
+  return { file, credit: `${sceneId}: ${credit}` };
 }

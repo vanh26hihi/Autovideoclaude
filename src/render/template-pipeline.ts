@@ -14,8 +14,8 @@ import {
 } from "../assets/audio-tools.js";
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
 import { composeTemplate } from "./template-composer.js";
-import { autoFindSceneImage, inlineSceneImage } from "../assets/image-inline.js";
-import { fitClipToDuration, concatVideos, muxAudioOntoVideo, finishVideo } from "./video-tools.js";
+import { autoFindSceneImage, autoFindSceneVideo, inlineSceneImage } from "../assets/image-inline.js";
+import { fitClipToDuration, concatVideos, muxAudioOntoVideo, finishVideo, prepBackgroundVideo } from "./video-tools.js";
 import { detectSpeechSegments, estimateWordTimings, writeKaraokeAss, DEFAULT_KARAOKE, type WordTiming } from "./karaoke.js";
 import { log } from "../utils/logger.js";
 
@@ -23,6 +23,12 @@ const TOTAL_STEPS = 8;
 const SCENE_GAP_SEC = 0.3;
 const OUTRO_HOLD_SEC = 3;
 const RENDER_FPS = 30;
+/** Output canvas per aspect (matches the templates' native compositions). */
+const FRAME_SIZE: Record<"16:9" | "9:16" | "1:1", [number, number]> = {
+  "16:9": [1920, 1080],
+  "9:16": [1080, 1920],
+  "1:1": [1080, 1080],
+};
 const DEFAULT_MUSIC_FILE = join("assets", "music", "default.mp3");
 
 /** Resolve the background-music file: script.music → BG_MUSIC_FILE → assets/music/default.mp3. */
@@ -150,7 +156,17 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
     if (existsSync(rawClip)) {
       log.info(`  scene ${scene.id}: REUSE clip — delete to force re-render`);
     } else {
-      const found = await autoFindSceneImage(scene.inputs, orientation, scene.id);
+      // A stock video clip (video_query) wins over a photo; the photo/icons are the fallback.
+      const video = await autoFindSceneVideo(scene.inputs, orientation, scene.id);
+      let bgVideo: string | undefined;
+      if (video) {
+        bgVideo = join(clipsDir, `scene-${scene.id}.bg.mp4`);
+        const [w, h] = FRAME_SIZE[script.aspect];
+        await prepBackgroundVideo(video.file, bgVideo, w, h, visualDur, RENDER_FPS);
+      }
+      const found = video
+        ? { inputs: { ...scene.inputs, image: "" }, credit: video.credit }
+        : await autoFindSceneImage(scene.inputs, orientation, scene.id);
       // Per-clip credit file, so reused clips keep theirs and icon fallbacks drop stale ones.
       const creditFile = join(clipsDir, `scene-${scene.id}.credit.txt`);
       if (found.credit) await writeFile(creditFile, found.credit + "\n", "utf8");
@@ -161,7 +177,10 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
         aspect: script.aspect,
         outputPath: rawClip,
         fps: RENDER_FPS,
+        bgVideo,
+        durationSec: bgVideo ? visualDur : undefined,
       });
+      if (bgVideo) await rm(bgVideo, { force: true });
     }
     const creditFile = join(clipsDir, `scene-${scene.id}.credit.txt`);
     if (existsSync(creditFile)) credits.push((await readFile(creditFile, "utf8")).trim());

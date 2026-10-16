@@ -31,6 +31,9 @@ Renders 7 s of motion, so it stays alive for long narration.
 | --------- | -------- | ----------- | -------------------------------------------------------------------------- |
 | `image_query` | string | 3–6 words | English "who + doing what + where" (e.g. "person using phone at night") describing a photo — the pipeline searches Pexels/Pixabay (free API key) or else Wikimedia, and fills `image`. Use on every scene |
 | `image_pick`  | number | ≥0        | take the n-th search result instead of the first (optional)                |
+| `video_query` | string | 2–5 words | English "who + doing what" for a stock VIDEO clip (Pexels/Pixabay Videos, same keys). Wins over the photo: the clip is cropped to fill, looped/trimmed to the scene, and played full-frame under the term/kicker/caption. Falls back to `image_query`/icons when nothing is found |
+| `video_pick`  | number | ≥0        | take the n-th video result (optional)                                      |
+| `video`       | string | path      | explicit local .mp4 instead of searching (optional)                        |
 | `image`   | string   | path / URL  | explicit photo (local file or http(s)); overrides `image_query`. Optional   |
 | `icons`   | string[] | 1–3 emoji   | giant illustration; ignored when an `image` is shown (fallback if it fails) |
 | `layout`  | string   | enum        | `single` · `flow` (A → B → C) · `vs` (two sides + VS badge)                 |

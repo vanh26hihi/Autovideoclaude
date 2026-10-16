@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -33,6 +33,43 @@ export interface ComposeArgs {
     aspect?: Aspect;
     fps?: number;
     quality?: "draft" | "standard" | "high";
+    /** A prepared background clip (see prepBackgroundVideo) played full-frame under the template. */
+    bgVideo?: string;
+    /** Composition length in seconds; with bgVideo, so the clip plays for the whole scene. */
+    durationSec?: number;
+}
+
+/**
+ * Copy the template next to the output and add a static, muted <video> as the
+ * first layer of #root (HyperFrames only plays <video> tags that are in the
+ * HTML with id/data-start/data-duration and a src on disk). The template's JS
+ * sees #bgvideo and skips its photo/icons.
+ */
+export function withBackgroundVideo(
+    templateDir: string,
+    entryFile: string,
+    bgVideo: string,
+    workDir: string,
+    durationSec?: number,
+): string {
+    rmSync(workDir, { recursive: true, force: true });
+    cpSync(templateDir, workDir, { recursive: true });
+    mkdirSync(join(workDir, "assets"), { recursive: true });
+    cpSync(bgVideo, join(workDir, "assets", "bg.mp4"));
+    const entryPath = join(workDir, entryFile);
+    // the entry may sit in compositions/, so point at the clip relative to it
+    const src = entryFile.includes("/") ? "../assets/bg.mp4" : "assets/bg.mp4";
+    const html = readFileSync(entryPath, "utf8").replace(
+        /<div id="root"[^>]*>/,
+        (tag) => {
+            const dur = durationSec ? durationSec.toFixed(2) : (/data-duration="([\d.]+)"/.exec(tag)?.[1] ?? "7");
+            return `${tag.replace(/data-duration="[\d.]+"/, `data-duration="${dur}"`)}
+  <video id="bgvideo" class="bgvideo" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" src="${src}" data-start="0" data-duration="${dur}" data-track-index="0" muted playsinline></video>`;
+        },
+    );
+    if (!html.includes('id="bgvideo"')) throw new Error(`No #root in ${entryPath} to add a background video to`);
+    writeFileSync(entryPath, html, "utf8");
+    return workDir;
 }
 
 /**
@@ -56,6 +93,9 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
     const outputPath = isAbsolute(args.outputPath)
         ? args.outputPath
         : resolve(process.cwd(), args.outputPath);
+    const workDir = args.bgVideo
+        ? withBackgroundVideo(templateDir, entryFile, args.bgVideo, `${outputPath}.tpl`, args.durationSec)
+        : undefined;
 
     // Pass variables via a temp file, NOT --variables: a JSON arg through
     // npx + shell:true on Windows mangles quotes/Unicode (em-dash, Vietnamese)
@@ -71,7 +111,7 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
         "-y",
         "hyperframes@0.6.94",
         "render",
-        templateDir,
+        workDir ?? templateDir,
         "--composition",
         entryFile,
         "--output",
@@ -82,6 +122,9 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
         quality,
         "--variables-file",
         varsFile,
+        // With a <video>, the default BeginFrame capture hangs at calibration;
+        // low-memory mode uses screenshot capture (1 worker), which plays it fine.
+        ...(workDir ? ["--low-memory-mode"] : []),
     ];
 
     log.info(`Compose ${templateId} (${entryFile}) → ${outputPath}`);
@@ -102,6 +145,7 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
         proc.on("error", reject);
     });
 
+    if (workDir) rmSync(workDir, { recursive: true, force: true });
     log.info(`Rendered: ${outputPath}`);
     return outputPath;
 }

@@ -50,6 +50,28 @@ export async function fitClipToDuration(
   await run("ffmpeg", args);
 }
 
+/**
+ * Turn a stock clip into a scene background: fill the frame (scale + centre
+ * crop), loop it if it is shorter than the scene, drop its audio, and encode
+ * at the render size so HyperFrames decodes it cheaply.
+ */
+export async function prepBackgroundVideo(
+  inPath: string,
+  outPath: string,
+  width: number,
+  height: number,
+  durationSec: number,
+  fps = 30,
+): Promise<void> {
+  await run("ffmpeg", [
+    "-y", "-stream_loop", "-1", "-i", inPath,
+    "-t", Math.max(0.1, durationSec).toFixed(3), "-an",
+    "-vf", `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1,fps=${fps}`,
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+    outPath,
+  ]);
+}
+
 /** Concatenate uniformly-encoded clips into one silent video (stream copy). */
 export async function concatVideos(clipPaths: string[], outPath: string): Promise<void> {
   if (clipPaths.length === 0) throw new Error("concatVideos: empty clipPaths");
