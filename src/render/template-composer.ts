@@ -87,7 +87,10 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
     log.info(`Compose ${templateId} (${entryFile}) → ${outputPath}`);
 
     await new Promise<void>((resolve, reject) => {
-        const proc = spawn("npx", spawnArgs, {
+        // shell: true joins args with spaces, so quote any arg containing one
+        // (e.g. a repo under "D:/Video AI/...") — double quotes work in cmd.exe and sh.
+        const shellArgs = spawnArgs.map((a) => (/\s/.test(a) ? `"${a}"` : a));
+        const proc = spawn("npx", shellArgs, {
             stdio: ["ignore", "inherit", "inherit"],
             shell: true,
         });
