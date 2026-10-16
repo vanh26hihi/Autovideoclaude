@@ -230,8 +230,8 @@
             data-composition-variables='{"brand_name":"AI Coding","tagline":"Bản tin mới mỗi ngày","primary_url":"https://aicodingvn.vercel.app/"}'
         >
             <div class="brand-bar">
-                <img class="logo-img" src="../assets/logo.svg" />
-                <span class="brand-label">Senior AI Engineer</span>
+                <img class="logo-img" alt="" />
+                <span class="brand-label"></span>
             </div>
 
             <div class="logo-wrap">
@@ -285,6 +285,17 @@
                 set(".brand .shimmer", v.brand_name);
                 set(".tagline", v.tagline);
                 set(".meta-url", v.primary_url);
+                if (!v.primary_url) { var mu = document.querySelector(".meta"); if (mu) mu.style.display = "none"; }
+                /* Logo + brand label only when the user supplied them (never hard-coded). */
+                var bar = document.querySelector(".brand-bar");
+                if (bar) {
+                    var logo = bar.querySelector(".logo-img");
+                    var lbl = bar.querySelector(".brand-label");
+                    if (v.logo) logo.src = String(v.logo); else logo.remove();
+                    if (v.brand_label) lbl.textContent = String(v.brand_label); else lbl.remove();
+                    if (!v.logo && !v.brand_label) bar.style.display = "none";
+                }
+
             })();
             window.__timelines = window.__timelines || {};
             window.__timelines["main"] = {
