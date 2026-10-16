@@ -3,7 +3,9 @@ import nock from "nock";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { fetchImage } from "./image-fetcher.js";
+import { fetchImage, fetchTiming } from "./image-fetcher.js";
+
+fetchTiming.retryMs = [1, 1];
 
 let tmp: string;
 beforeEach(() => { nock.cleanAll(); tmp = mkdtempSync(join(tmpdir(), "img-")); });
@@ -42,5 +44,11 @@ describe("fetchImage", () => {
     const result = await fetchImage(null, join(tmp, "x.jpg"));
     expect(result.success).toBe(false);
     expect(result.reason).toMatch(/no url|null/i);
+  });
+  it("retries a 429 before giving up", async () => {
+    nock("https://example.com").get("/busy.jpg").reply(429);
+    nock("https://example.com").get("/busy.jpg").reply(200, TINY_JPG, { "content-type": "image/jpeg" });
+    const result = await fetchImage("https://example.com/busy.jpg", join(tmp, "b.jpg"));
+    expect(result.success).toBe(true);
   });
 });

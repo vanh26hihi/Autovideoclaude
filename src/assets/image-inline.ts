@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
 import { extname, isAbsolute, join, resolve } from "node:path";
 import { fetchImage } from "./image-fetcher.js";
 import { searchImage, type Orientation } from "./image-search.js";
@@ -13,6 +14,14 @@ const MIME: Record<string, string> = {
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
 };
+
+/** Content type from magic bytes (cached search photos are stored as *.img). */
+function sniffMime(buf: Buffer): string {
+  if (buf.subarray(0, 4).toString("hex") === "89504e47") return "image/png";
+  if (buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP") return "image/webp";
+  if (buf.subarray(0, 3).toString() === "GIF") return "image/gif";
+  return "image/jpeg";
+}
 
 /** Input slots that may hold an image path/URL (photo, channel logo). */
 const IMAGE_KEYS = ["image", "logo"] as const;
@@ -58,30 +67,53 @@ async function toDataUri(src: string, cacheDir: string, name: string): Promise<s
     }
   }
 
-  const mime = MIME[extname(path).toLowerCase()] ?? "image/jpeg";
-  const b64 = (await readFile(path)).toString("base64");
+  const buf = await readFile(path);
+  const mime = MIME[extname(path).toLowerCase()] ?? sniffMime(buf);
+  const b64 = buf.toString("base64");
   return `data:${mime};base64,${b64}`;
 }
+
+/** Searched photos are cached here by query, so re-renders don't hit the APIs again. */
+export const IMAGE_CACHE_DIR = join("output", ".image-cache");
 
 /**
  * Fill a scene's photo automatically: when `inputs.image` is empty and
  * `inputs.image_query` is set (English keywords), search the web for a real
- * photo (see image-search.ts). `image_pick` (0-based) picks another result
- * if the first one doesn't fit. Returns the inputs plus the credit line, if any.
+ * photo (see image-search.ts) and download it at once (stock URLs expire).
+ * `image_pick` (0-based) picks another result if the first one doesn't fit.
+ * Returns the inputs (image = local file) plus the credit line, if any.
  */
 export async function autoFindSceneImage(
   inputs: Record<string, unknown>,
   orientation: Orientation,
   sceneId: string,
+  cacheDir: string = IMAGE_CACHE_DIR,
 ): Promise<{ inputs: Record<string, unknown>; credit?: string }> {
   const query = inputs.image_query;
   if (inputs.image || typeof query !== "string" || !query.trim()) return { inputs };
   const pick = typeof inputs.image_pick === "number" ? inputs.image_pick : 0;
+  const key = createHash("sha1").update(`${query.trim().toLowerCase()}|${orientation}|${pick}`).digest("hex").slice(0, 16);
+  const file = join(resolve(cacheDir), `${key}.img`);
+  const creditFile = `${file}.txt`;
+
+  if (existsSync(file)) {
+    const credit = existsSync(creditFile) ? (await readFile(creditFile, "utf8")).trim() : "cached";
+    log.info(`  scene ${sceneId}: photo "${query}" (cached)`);
+    return { inputs: { ...inputs, image: file }, credit: `${sceneId}: ${credit}` };
+  }
+
   const hit = await searchImage(query.trim(), orientation, pick);
   if (!hit) {
     log.info(`  scene ${sceneId}: no photo found for "${query}" — using icons`);
     return { inputs };
   }
+  const res = await fetchImage(hit.url, file);
+  if (!res.success) {
+    log.info(`  scene ${sceneId}: photo download failed (${res.reason}) — using icons`);
+    return { inputs };
+  }
+  const credit = `${hit.credit} — ${hit.url}`;
+  await writeFile(creditFile, credit + "\n", "utf8");
   log.info(`  scene ${sceneId}: photo "${query}" → ${hit.provider} (${hit.credit})`);
-  return { inputs: { ...inputs, image: hit.url }, credit: `${sceneId}: ${hit.credit} — ${hit.url}` };
+  return { inputs: { ...inputs, image: file }, credit: `${sceneId}: ${credit}` };
 }
