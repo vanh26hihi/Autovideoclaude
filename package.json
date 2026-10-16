@@ -5,12 +5,14 @@
   "description": "Tạo video bằng code với Remotion + TypeScript",
   "scripts": {
     "dev": "remotion studio",
-    "render": "remotion render HelloVideo out/hello.mp4",
+    "render": "remotion render SocialMedia out/social-media.mp4",
+    "render:hello": "remotion render HelloVideo out/hello.mp4",
     "still": "remotion still HelloVideo out/thumbnail.png --frame=60",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@remotion/cli": "4.0.535",
+    "@remotion/transitions": "^4.0.535",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "remotion": "4.0.535"

@@ -21,7 +21,8 @@ Mở địa chỉ hiện trong terminal (mặc định http://localhost:3000) đ
 ## Render ra file
 
 ```bash
-npm run render   # -> out/hello.mp4 (1920x1080, 30fps, 5 giây)
+npm run render        # -> out/social-media.mp4 (1920x1080, 30fps, 60 giây)
+npm run render:hello  # -> out/hello.mp4 (video demo 5 giây)
 npm run still    # -> out/thumbnail.png (khung hình 60)
 ```
 
@@ -40,6 +41,10 @@ src/
   index.ts        # điểm vào, đăng ký root
   Root.tsx        # khai báo các composition (id, kích thước, fps, thời lượng)
   HelloVideo.tsx  # video demo: tiêu đề chạy từng chữ, gạch chân, phụ đề, fade out
+  social/         # video 1 phút "Giới trẻ và mạng xã hội"
+    scenes.tsx            # 6 cảnh: câu hỏi mở đầu, phép tính thời gian, tác hại, câu hỏi suy ngẫm, giải pháp, kết
+    SocialMediaVideo.tsx  # ghép các cảnh với hiệu ứng chuyển mờ, chỉnh thời lượng từng cảnh ở đây
+    theme.ts              # màu sắc, font
 remotion.config.ts
 ```
 
