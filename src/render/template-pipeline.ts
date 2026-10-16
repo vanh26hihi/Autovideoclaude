@@ -29,6 +29,8 @@ const FRAME_SIZE: Record<"16:9" | "9:16" | "1:1", [number, number]> = {
   "9:16": [1080, 1920],
   "1:1": [1080, 1080],
 };
+/** Templates whose timeline adapts to any length (ambient motion until the exit). */
+const STRETCH_TEMPLATES = new Set(["frame-motion"]);
 const DEFAULT_MUSIC_FILE = join("assets", "music", "default.mp3");
 
 /** Resolve the background-music file: script.music → BG_MUSIC_FILE → assets/music/default.mp3. */
@@ -179,7 +181,8 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
         outputPath: rawClip,
         fps: RENDER_FPS,
         bgVideo,
-        durationSec: bgVideo ? visualDur : undefined,
+        // animated templates run for the whole scene instead of freezing on their last frame
+        durationSec: bgVideo || STRETCH_TEMPLATES.has(scene.templateId) ? visualDur : undefined,
       });
       if (bgVideo) await rm(bgVideo, { force: true });
     }

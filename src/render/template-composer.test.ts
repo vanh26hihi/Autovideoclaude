@@ -36,3 +36,18 @@ describe("withBackgroundVideo", () => {
     expect(html).toContain('data-duration="7"');
   });
 });
+
+import { withDuration } from "./template-composer.js";
+
+describe("withDuration", () => {
+  it("stretches #root and bundles GSAP for templates that load it locally", () => {
+    const base = mkdtempSync(join(tmpdir(), "dur-"));
+    const tpl = join(base, "tpl");
+    mkdirSync(join(tpl, "compositions"), { recursive: true });
+    writeFileSync(join(tpl, "compositions", "portrait.html"),
+      '<div id="root" data-composition-id="main" data-start="0" data-duration="7"></div><script src="../assets/gsap.min.js"></script>');
+    const work = withDuration(tpl, "compositions/portrait.html", join(base, "work"), 8.4);
+    expect(readFileSync(join(work, "compositions", "portrait.html"), "utf8")).toContain('data-duration="8.40"');
+    expect(readFileSync(join(work, "assets", "gsap.min.js"), "utf8")).toContain("GSAP");
+  });
+});

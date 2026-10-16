@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { log } from "../utils/logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,8 +36,43 @@ export interface ComposeArgs {
     quality?: "draft" | "standard" | "high";
     /** A prepared background clip (see prepBackgroundVideo) played full-frame under the template. */
     bgVideo?: string;
-    /** Composition length in seconds; with bgVideo, so the clip plays for the whole scene. */
+    /** Composition length in seconds (scene length), so motion/video runs for the whole scene instead of freezing. */
     durationSec?: number;
+    /** Screenshot capture (1 worker): needed for <video> and for big colour-emoji scenes, which stall BeginFrame capture. */
+    screenshotCapture?: boolean;
+}
+
+const require = createRequire(import.meta.url);
+
+/** A template that loads `assets/gsap.min.js` gets GSAP from node_modules (no CDN at render time). */
+const usesLocalGsap = (html: string) => html.includes("assets/gsap.min.js");
+
+function bundleLocalLibs(workDir: string, entryFile: string): void {
+    if (!usesLocalGsap(readFileSync(join(workDir, entryFile), "utf8"))) return;
+    mkdirSync(join(workDir, "assets"), { recursive: true });
+    cpSync(require.resolve("gsap/dist/gsap.min.js"), join(workDir, "assets", "gsap.min.js"));
+}
+
+/** Copy the template into workDir (fresh), with local libraries bundled. */
+function copyTemplate(templateDir: string, entryFile: string, workDir: string): void {
+    rmSync(workDir, { recursive: true, force: true });
+    cpSync(templateDir, workDir, { recursive: true });
+    bundleLocalLibs(workDir, entryFile);
+}
+
+/**
+ * Copy the template next to the output and set the scene length on #root
+ * (`data-duration` is read at compile time, so it can't come from a variable).
+ */
+export function withDuration(templateDir: string, entryFile: string, workDir: string, durationSec?: number): string {
+    copyTemplate(templateDir, entryFile, workDir);
+    if (!durationSec) return workDir;
+    const entryPath = join(workDir, entryFile);
+    const html = readFileSync(entryPath, "utf8").replace(/<div id="root"[^>]*>/, (tag) =>
+        tag.replace(/data-duration="[\d.]+"/, `data-duration="${durationSec.toFixed(2)}"`),
+    );
+    writeFileSync(entryPath, html, "utf8");
+    return workDir;
 }
 
 /**
@@ -52,8 +88,7 @@ export function withBackgroundVideo(
     workDir: string,
     durationSec?: number,
 ): string {
-    rmSync(workDir, { recursive: true, force: true });
-    cpSync(templateDir, workDir, { recursive: true });
+    copyTemplate(templateDir, entryFile, workDir);
     mkdirSync(join(workDir, "assets"), { recursive: true });
     cpSync(bgVideo, join(workDir, "assets", "bg.mp4"));
     const entryPath = join(workDir, entryFile);
@@ -95,7 +130,9 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
         : resolve(process.cwd(), args.outputPath);
     const workDir = args.bgVideo
         ? withBackgroundVideo(templateDir, entryFile, args.bgVideo, `${outputPath}.tpl`, args.durationSec)
-        : undefined;
+        : args.durationSec || usesLocalGsap(readFileSync(join(templateDir, entryFile), "utf8"))
+          ? withDuration(templateDir, entryFile, `${outputPath}.tpl`, args.durationSec)
+          : undefined;
 
     // Pass variables via a temp file, NOT --variables: a JSON arg through
     // npx + shell:true on Windows mangles quotes/Unicode (em-dash, Vietnamese)
@@ -122,9 +159,9 @@ export async function composeTemplate(args: ComposeArgs): Promise<string> {
         quality,
         "--variables-file",
         varsFile,
-        // With a <video>, the default BeginFrame capture hangs at calibration;
-        // low-memory mode uses screenshot capture (1 worker), which plays it fine.
-        ...(workDir ? ["--low-memory-mode"] : []),
+        // With a <video> or giant colour emoji, the default BeginFrame capture hangs;
+        // low-memory mode uses screenshot capture (1 worker), which renders them fine.
+        ...(args.bgVideo || args.screenshotCapture ? ["--low-memory-mode"] : []),
     ];
 
     log.info(`Compose ${templateId} (${entryFile}) → ${outputPath}`);
