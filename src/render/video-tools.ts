@@ -28,6 +28,16 @@ const ENCODE = (fps: number) => [
 ];
 
 /**
+ * Final styled pass: film grain is incompressible, so CRF alone balloons to
+ * ~120 Mbps. Cap the bitrate (12 Mbps is plenty for 1080p upload).
+ */
+const FINISH_ENCODE = (fps: number) => [
+  ...ENCODE(fps).map((a) => (a === "18" ? "20" : a)),
+  "-maxrate", "12M",
+  "-bufsize", "24M",
+];
+
+/**
  * Re-encode `inPath` to exactly `targetSec` seconds (video only):
  * - longer target → freeze the last frame (tpad clone) to fill the remainder,
  *   so a 5s poster animation holds while the scene's narration continues;
@@ -136,7 +146,7 @@ export function lookFilters(look: LookStyle, height: number, stamp: string, stam
     "eq=contrast=1.06:saturation=0.78:gamma=0.97",
     "colorchannelmixer=rr=1.05:gg=0.98:bb=0.82",
     "vignette=angle=PI/3.6",
-    "noise=alls=9:allf=t",
+    "noise=alls=7:allf=t",
   ];
   if (stamp && stampFont) {
     const size = Math.round(height * 0.045);
@@ -156,7 +166,7 @@ export async function finishVideo(inPath: string, outPath: string, height: numbe
   }
   if (!filters.length) throw new Error("finishVideo: nothing to apply");
   await new Promise<void>((resolveP, reject) => {
-    const proc = spawn("ffmpeg", ["-y", "-i", resolve(inPath), "-vf", filters.join(","), ...ENCODE(opts.fps ?? 30), resolve(outPath)], { cwd: opts.cwd });
+    const proc = spawn("ffmpeg", ["-y", "-i", resolve(inPath), "-vf", filters.join(","), ...FINISH_ENCODE(opts.fps ?? 30), resolve(outPath)], { cwd: opts.cwd });
     let err = "";
     proc.stderr.on("data", (d) => (err += d.toString()));
     proc.on("close", (code) => (code === 0 ? resolveP() : reject(new Error(`ffmpeg finish failed (exit ${code}): ${err.slice(-800)}`))));
