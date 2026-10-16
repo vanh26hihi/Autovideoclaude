@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "renderer": "hyperframes",
+  "aspect": "9:16",
+  "metadata": {
+    "title": "Tìm kiếm ước mơ của bản thân",
+    "source": {
+      "url": "",
+      "domain": "",
+      "image": null
+    },
+    "channel": "Vanhhehe"
+  },
+  "voice": {
+    "provider": "vieneu",
+    "speed": 1.0
+  },
+  "music": {
+    "file": "assets/music/default.mp3",
+    "volume": 0.15,
+    "fadeOutSec": 3
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "type": "hook",
+      "voiceText": "Nếu ngày mai không phải đi làm, không ai bắt buộc, bạn sẽ dành cả ngày để làm gì? Câu trả lời đó có thể chính là ước mơ bạn đã quên.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "young person looking at city skyline sunset",
+        "icons": [
+          "🌅"
+        ],
+        "caption": "Ước mơ của bạn *là gì?*",
+        "tone": "warm"
+      }
+    },
+    {
+      "id": "body-1",
+      "type": "body",
+      "voiceText": "Rất nhiều người sống theo lịch trình mỗi ngày, làm việc chăm chỉ, nhưng trong lòng vẫn thấy trống rỗng. Không phải vì họ lười, mà vì họ chưa biết mình thật sự muốn gì.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "tired office worker staring out window",
+        "icons": [
+          "😶"
+        ],
+        "caption": "Bận rộn nhưng *trống rỗng*",
+        "tone": "dark"
+      }
+    },
+    {
+      "id": "body-2",
+      "type": "body",
+      "voiceText": "Bước đầu tiên là nhìn lại tuổi thơ. Hồi nhỏ bạn thích làm gì đến quên cả giờ ăn? Vẽ, kể chuyện, tháo lắp đồ chơi? Những niềm vui đó thường là manh mối đầu tiên.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "child drawing happily at table",
+        "icons": [
+          "🎨"
+        ],
+        "kicker": "Bước 1",
+        "caption": "Nhớ lại *niềm vui tuổi thơ*",
+        "tone": "warm"
+      }
+    },
+    {
+      "id": "body-3",
+      "type": "body",
+      "voiceText": "Bước hai, để ý những lúc bạn quên cả thời gian. Khi làm việc gì mà một tiếng trôi qua như năm phút, đó là dấu hiệu bạn đang chạm vào đam mê.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "woman painting canvas in studio focused",
+        "icons": [
+          "⏳"
+        ],
+        "kicker": "Bước 2",
+        "caption": "Việc làm bạn *quên thời gian*",
+        "tone": "purple"
+      }
+    },
+    {
+      "id": "body-4",
+      "type": "body",
+      "voiceText": "Bước ba, hỏi xem điều gì khiến bạn bực mình về thế giới này. Vấn đề bạn muốn sửa nhất thường cho thấy giá trị bạn quan tâm nhất.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "volunteers cleaning beach together",
+        "icons": [
+          "🌍"
+        ],
+        "kicker": "Bước 3",
+        "caption": "Bạn muốn *thay đổi* điều gì?",
+        "tone": "green"
+      }
+    },
+    {
+      "id": "body-5",
+      "type": "body",
+      "voiceText": "Bước bốn, viết ra giấy. Mỗi sáng dành mười phút viết tự do về cuộc sống bạn mong muốn sau năm năm nữa. Viết ra giúp suy nghĩ mơ hồ trở nên rõ ràng.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "person writing in journal morning coffee",
+        "icons": [
+          "✍️"
+        ],
+        "kicker": "Bước 4",
+        "caption": "Viết ra *mỗi sáng*",
+        "tone": "blue"
+      }
+    },
+    {
+      "id": "body-6",
+      "type": "body",
+      "voiceText": "Bước năm, thử thật nhiều. Đừng chỉ nghĩ, hãy làm thử. Học một khoá ngắn, tham gia một câu lạc bộ, nhận một dự án nhỏ. Ước mơ thường được tìm thấy khi bạn hành động, không phải khi ngồi chờ.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "young people learning in workshop class",
+        "icons": [
+          "🧪"
+        ],
+        "kicker": "Bước 5",
+        "caption": "Thử nhiều, *đừng chỉ nghĩ*",
+        "tone": "warm"
+      }
+    },
+    {
+      "id": "body-7",
+      "type": "body",
+      "voiceText": "Và đừng sợ ước mơ thay đổi. Ước mơ ở tuổi hai mươi có thể khác ở tuổi ba mươi. Điều quan trọng là bạn luôn bước đi theo hướng khiến mình thấy sống động.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "hiker walking mountain trail sunrise",
+        "icons": [
+          "🧭"
+        ],
+        "caption": "Ước mơ có thể *thay đổi*",
+        "tone": "blue"
+      }
+    },
+    {
+      "id": "body-8",
+      "type": "body",
+      "voiceText": "Bắt đầu từ hôm nay. Chọn một việc nhỏ trong năm bước trên và làm ngay. Ước mơ không tự tìm đến, nhưng nó luôn chờ người dám đi tìm.",
+      "templateId": "frame-visual-full",
+      "inputs": {
+        "image_query": "woman arms raised on mountain top",
+        "icons": [
+          "🚀"
+        ],
+        "caption": "Bắt đầu *ngay hôm nay*",
+        "tone": "purple"
+      }
+    },
+    {
+      "id": "outro",
+      "type": "outro",
+      "voiceText": "Nếu thấy hữu ích, hãy lưu video này lại và chia sẻ cho người bạn đang loay hoay tìm ước mơ nhé.",
+      "templateId": "frame-logo-outro",
+      "inputs": {
+        "brand_name": "Vanhhehe",
+        "tagline": "Ước mơ luôn chờ người dám đi tìm",
+        "primary_url": ""
+      }
+    }
+  ]
+}
