@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname, isAbsolute, join, resolve } from "node:path";
 import { fetchImage } from "./image-fetcher.js";
+import { searchImage, type Orientation } from "./image-search.js";
 import { log } from "../utils/logger.js";
 
 const MIME: Record<string, string> = {
@@ -60,4 +61,27 @@ async function toDataUri(src: string, cacheDir: string, name: string): Promise<s
   const mime = MIME[extname(path).toLowerCase()] ?? "image/jpeg";
   const b64 = (await readFile(path)).toString("base64");
   return `data:${mime};base64,${b64}`;
+}
+
+/**
+ * Fill a scene's photo automatically: when `inputs.image` is empty and
+ * `inputs.image_query` is set (English keywords), search the web for a real
+ * photo (see image-search.ts). `image_pick` (0-based) picks another result
+ * if the first one doesn't fit. Returns the inputs plus the credit line, if any.
+ */
+export async function autoFindSceneImage(
+  inputs: Record<string, unknown>,
+  orientation: Orientation,
+  sceneId: string,
+): Promise<{ inputs: Record<string, unknown>; credit?: string }> {
+  const query = inputs.image_query;
+  if (inputs.image || typeof query !== "string" || !query.trim()) return { inputs };
+  const pick = typeof inputs.image_pick === "number" ? inputs.image_pick : 0;
+  const hit = await searchImage(query.trim(), orientation, pick);
+  if (!hit) {
+    log.info(`  scene ${sceneId}: no photo found for "${query}" — using icons`);
+    return { inputs };
+  }
+  log.info(`  scene ${sceneId}: photo "${query}" → ${hit.provider} (${hit.credit})`);
+  return { inputs: { ...inputs, image: hit.url }, credit: `${sceneId}: ${hit.credit} — ${hit.url}` };
 }

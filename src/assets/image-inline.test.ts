@@ -43,3 +43,23 @@ describe("inlineSceneImage", () => {
     expect(out.icons).toEqual(["🔥"]);
   });
 });
+
+describe("autoFindSceneImage", () => {
+  it("searches a photo when only image_query is given", async () => {
+    process.env.PEXELS_API_KEY = "k";
+    nock("https://api.pexels.com").get("/v1/search").query(true)
+      .reply(200, { photos: [{ photographer: "Bo", src: { portrait: "https://img/run.jpg" } }] });
+    const { autoFindSceneImage } = await import("./image-inline.js");
+    const r = await autoFindSceneImage({ image_query: "man running sunrise", icons: ["🏃"] }, "portrait", "b1");
+    expect(r.inputs.image).toBe("https://img/run.jpg");
+    expect(r.credit).toContain("Bo / Pexels");
+    delete process.env.PEXELS_API_KEY;
+  });
+
+  it("keeps an explicit image", async () => {
+    const { autoFindSceneImage } = await import("./image-inline.js");
+    const r = await autoFindSceneImage({ image: "a.jpg", image_query: "x" }, "portrait", "b2");
+    expect(r.inputs.image).toBe("a.jpg");
+    expect(r.credit).toBeUndefined();
+  });
+});

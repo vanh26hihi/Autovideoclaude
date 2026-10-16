@@ -15,6 +15,8 @@ export async function fetchImage(url: string | null, outPath: string): Promise<F
     const resp = await axios.get<ArrayBuffer>(url, {
       responseType: "arraybuffer",
       timeout: 30000,
+      // Wikimedia (403) and Flickr (502) reject axios' default User-Agent.
+      headers: { "User-Agent": "autovideoclaude/1.0 (https://github.com/vanh26hihi/Autovideoclaude)" },
       validateStatus: (s) => s < 400,
     });
 

@@ -14,7 +14,9 @@ Người xem nhớ bằng **hình**, không phải bằng chữ. **Hình ảnh/i
 80–90% khung hình**, chữ trên màn hình chỉ là 1 dòng chú thích ngắn. Thông tin
 chi tiết để **giọng đọc** nói, KHÔNG viết ra màn hình.
 
-- **≥ 70% scene body dùng `frame-visual-full`** (ảnh toàn màn hình hoặc icon khổng lồ).
+- **≥ 70% scene body dùng `frame-visual-full`** với **ẢNH THẬT** lấy từ mạng: mỗi scene
+  ghi `image_query` (từ khoá tiếng Anh mô tả bức ảnh), pipeline **tự tìm + tải ảnh** phù
+  hợp. Icon/emoji chỉ là dự phòng khi không tìm được ảnh — không phải hình chính.
 - Chữ hiển thị mỗi scene **≤ 8 từ** (caption). Không đoạn văn, không bullet dài.
 - Template nhiều chữ (`frame-aicoding-list`, `frame-aicoding-comparison`,
   `frame-bold-poster`) **tối đa 1 scene mỗi video**, và chỉ khi thật cần. So sánh
@@ -64,11 +66,11 @@ Phát hiện input rồi lấy nội dung:
 **Chỉ dùng templateId có trong CATALOG.** Hiện có:
 
 **HOOK (chỉ 1):**
-- `frame-visual-full` — **ưu tiên**: 1 hình/icon cực lớn gây tò mò + câu hook ngắn.
+- `frame-visual-full` — **ưu tiên**: 1 ảnh thật gây tò mò (`image_query`) + câu hook ngắn.
 - `frame-liquid-bg-hero` — hero aurora (blob động + headline ngắn) khi hook là 1 câu hỏi mạnh, không có hình hợp.
 
 **BODY (Claude tự chọn theo nội dung — xem Step 5):**
-- `frame-visual-full` — **MẶC ĐỊNH cho body**: ảnh toàn màn hình (Ken Burns) HOẶC 1–3 icon khổng lồ (`single` / `flow` A→B→C / `vs`), chữ chỉ 1 caption ngắn ở đáy.
+- `frame-visual-full` — **MẶC ĐỊNH cho body**: ảnh thật toàn màn hình (Ken Burns), tự tìm theo `image_query`; chữ chỉ 1 caption ngắn ở đáy. Icon khổng lồ chỉ hiện khi không có ảnh.
 - `frame-vignelli` — 1 con số nền tối charcoal + đỏ.
 - `frame-pentagram-stat` — 1 con số nền tối neon (Swiss grid, số cam phát sáng + accent cyan + biểu đồ cột).
 - `frame-bold-poster` — tuyên bố mạnh nhiều dòng + figure số lớn.
@@ -115,9 +117,12 @@ Cấu trúc bắt buộc:
 **Map nội dung → template:**
 
 - hook → **ưu tiên `frame-visual-full`** (1 icon/ảnh cực lớn + caption hook ngắn), hoặc `frame-liquid-bg-hero` (slots: kicker, headline, subheadline, cta, brand, logo, brand_label; `headline` ≤ 6 từ, gradient tuỳ chỉnh qua `headline_from`/`headline_to`). `kicker`/`brand`/`logo`/`brand_label` chỉ điền khi user đã cung cấp.
-- **body → mặc định `frame-visual-full`** (≥ 70% scene body). Slots: `image`, `icons[]`, `layout`, `labels[]`, `caption`, `kicker`, `tone`:
-    - `image`: ảnh minh hoạ phủ kín khung (đường dẫn file hoặc URL; pipeline tự tải + nhúng). Nguồn ảnh: file user đưa (vd `assets/images/…`), `og:image` của bài báo, hoặc ảnh miễn phí bản quyền (Wikimedia Commons, Unsplash, Pexels — link trực tiếp tới file ảnh). Tải lỗi → tự dùng `icons`.
-    - `icons`: 1–3 emoji to (📱 💡 😴 🔥 🧠 💪 ⏰ 📈 …) — Claude TỰ CHỌN emoji nói đúng ý. `layout`: `single` (1 icon khổng lồ), `flow` (2–3 icon nối mũi tên = nguyên nhân → kết quả / các bước), `vs` (2 icon đối đầu, `labels` = tên 2 vế, ≤ 10 ký tự). Có `image` thì chỉ hiện ảnh; `icons` là phương án dự phòng khi ảnh tải lỗi (nên luôn điền).
+- **body → mặc định `frame-visual-full`** (≥ 70% scene body). Slots: `image_query`, `image`, `image_pick`, `icons[]`, `layout`, `labels[]`, `caption`, `kicker`, `tone`:
+    - `image_query` (**bắt buộc mỗi scene**): **2–4 từ khoá tiếng Anh**, danh từ cụ thể trước, tả cảnh nhìn thấy được — vd "phone bed night", "tired man desk", "runner sunrise", "woman reading book". Tránh từ trừu tượng ("motivation", "success") và tên riêng dễ nhầm. Pipeline tự tìm ảnh dọc (9:16) qua **Pexels/Pixabay** (cần `PEXELS_API_KEY` hoặc `PIXABAY_API_KEY` miễn phí trong `.env.local` — **nên có**, ảnh stock khớp nội dung), không có key thì dùng Wikimedia Commons (tự rút ngắn từ khoá; ảnh hay lệch chủ đề). Ảnh tìm được + nguồn ghi vào `image-credits.txt` trong outputDir.
+    - Chưa có key Pexels/Pixabay → **nhắc user đăng ký key miễn phí** trước khi render.
+    - `image_pick` (tuỳ chọn, mặc định 0): lấy kết quả thứ n nếu ảnh đầu không hợp (xoá `clips/scene-<id>.mp4` rồi chạy lại).
+    - `image`: đường dẫn file hoặc URL ảnh cụ thể (file user đưa, `og:image` bài báo) — có `image` thì bỏ qua `image_query`. Tải lỗi / không tìm được → tự dùng `icons`.
+    - `icons` (dự phòng, vẫn nên điền): 1–3 emoji to (📱 💡 😴 🔥 🧠 💪 ⏰ 📈 …) — Claude TỰ CHỌN emoji nói đúng ý. `layout`: `single` (1 icon khổng lồ), `flow` (2–3 icon nối mũi tên = nguyên nhân → kết quả / các bước), `vs` (2 icon đối đầu, `labels` = tên 2 vế, ≤ 10 ký tự). Có `image` thì chỉ hiện ảnh; `icons` là phương án dự phòng khi ảnh tải lỗi (nên luôn điền).
     - `caption`: **≤ 8 từ**, bọc `*từ khoá*` để tô màu nhấn. `kicker`: nhãn nhỏ tuỳ chọn (vd "Mẹo 1", ≤ 16 ký tự).
     - `tone`: nền khi không có ảnh — `blue` / `warm` / `green` / `purple` / `red` / `dark`; đổi tone giữa các scene cho đỡ nhàm.
 - Chỉ khi scene thật sự là **1 con số** hoặc **1 từ chốt**, có thể xen 1–2 scene template chữ dưới đây (giữ chữ cực ngắn):
@@ -171,7 +176,7 @@ Bảng đầy đủ (áp dụng cho `voiceText`):
 ### Step 6: Tự kiểm tra
 
 - scenes[0]=hook, scene cuối=outro; mỗi templateId ∈ CATALOG; mỗi inputs đủ slot bắt buộc;
-- ≥ 70% body là `frame-visual-full`; mỗi caption ≤ 8 từ; không scene nào là đoạn văn trên màn hình;
+- ≥ 70% body là `frame-visual-full` và **mỗi scene đó có `image_query`** (tiếng Anh, tả cảnh cụ thể); mỗi caption ≤ 8 từ; không scene nào là đoạn văn trên màn hình;
 - slot nguồn/logo/kênh chỉ chứa đúng điều user đã trả lời (không thì `""`); không có nhãn "9:16"/"16:9" trên màn hình;
 - headline ≤3 dòng & mỗi dòng ngắn; `hero` của `frame-build-minimal` ≤ 2 từ ngắn (vd "BẮT ĐẦU", "KỶ LUẬT") — template tự co chữ cho vừa và chỉ xuống dòng giữa các từ; voiceText đã viết số ra chữ **và KHÔNG chứa emoji/icon**; emoji (nếu có) chỉ nằm trong `inputs`. Sửa thầm tối đa 2 lần.
 
@@ -201,6 +206,10 @@ npm run pipeline -- <outputDir>/script.json
 
 CLI tự nhận `renderer: "hyperframes"` và chạy template pipeline (TTS → render
 từng template → fit theo giọng đọc → ghép + trộn SFX). Lỗi → báo rõ + đường dẫn outputDir.
+
+### Step 8b: Kiểm tra ảnh
+
+Mở `image-credits.txt` và xem 1 khung hình mỗi cảnh (vd `ffmpeg -ss 3 -i clips/scene-<id>.mp4 -frames:v 1 preview-<id>.png`). Ảnh lệch chủ đề hoặc không phù hợp (nhạy cảm, quảng cáo, chữ lạ) → đổi `image_query` hoặc tăng `image_pick`, xoá `clips/scene-<id>*.mp4` rồi chạy lại pipeline.
 
 ### Step 9: Báo kết quả
 

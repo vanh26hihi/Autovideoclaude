@@ -218,6 +218,8 @@ TTS_PROVIDER=vieneu
 VIENEU_ENDPOINT=http://127.0.0.1:8124
 VIENEU_VOICE=Thiện Minh
 VIENEU_SPEED=1.15   # server reading speed (1.0 = original)
+PEXELS_API_KEY=     # optional: free key from pexels.com/api — best stock photos for scenes
+PIXABAY_API_KEY=    # optional: free key from pixabay.com/api/docs (without keys: Wikimedia only, weaker matches)
 ```
 
 Start the voice server before running the pipeline (the first run downloads the model):
