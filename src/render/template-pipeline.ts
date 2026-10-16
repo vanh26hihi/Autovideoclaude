@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import pLimit from "p-limit";
@@ -150,7 +150,10 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
       log.info(`  scene ${scene.id}: REUSE clip — delete to force re-render`);
     } else {
       const found = await autoFindSceneImage(scene.inputs, orientation, scene.id);
-      if (found.credit) credits.push(found.credit);
+      // Per-clip credit file, so reused clips keep theirs and icon fallbacks drop stale ones.
+      const creditFile = join(clipsDir, `scene-${scene.id}.credit.txt`);
+      if (found.credit) await writeFile(creditFile, found.credit + "\n", "utf8");
+      else await rm(creditFile, { force: true });
       await composeTemplate({
         templateId: scene.templateId,
         inputs: await inlineSceneImage(found.inputs, clipsDir, scene.id),
@@ -159,14 +162,19 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
         fps: RENDER_FPS,
       });
     }
+    const creditFile = join(clipsDir, `scene-${scene.id}.credit.txt`);
+    if (existsSync(creditFile)) credits.push((await readFile(creditFile, "utf8")).trim());
     await fitClipToDuration(rawClip, visualDur, fitClip, RENDER_FPS);
     log.info(`  scene ${scene.id}: ${scene.templateId} → ${visualDur.toFixed(2)}s`);
     fittedClips.push(fitClip);
   }
 
+  const creditsPath = join(outputDir, "image-credits.txt");
   if (credits.length) {
-    await writeFile(join(outputDir, "image-credits.txt"), credits.join("\n") + "\n", "utf8");
-    log.info(`  image credits → ${join(outputDir, "image-credits.txt")}`);
+    await writeFile(creditsPath, credits.join("\n") + "\n", "utf8");
+    log.info(`  image credits → ${creditsPath}`);
+  } else {
+    await rm(creditsPath, { force: true });
   }
 
   // STEP 7 — concat clips + mux voice
