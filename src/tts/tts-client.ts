@@ -15,9 +15,9 @@ import type { Config } from "../config.js";
 import { OmniVoiceClient } from "./omnivoice-client.js";
 import { VieNeuClient } from "./vieneu-client.js";
 
-export function createTtsClient(cfg: Config): TtsClient {
+export function createTtsClient(cfg: Config, opts: { speed?: number } = {}): TtsClient {
   if (cfg.ttsProvider === "vieneu") {
-    return new VieNeuClient({ endpoint: cfg.vieneuEndpoint, voice: cfg.vieneuVoice });
+    return new VieNeuClient({ endpoint: cfg.vieneuEndpoint, voice: cfg.vieneuVoice, speed: opts.speed });
   }
   return new OmniVoiceClient({ endpoint: cfg.omnivoiceEndpoint });
 }
