@@ -73,6 +73,9 @@
   .term-wrap { position: absolute; left: 0; right: 0; top: 42%; transform: translateY(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
     padding: 0 70px; }
+  /* display:flex beats the [hidden] attribute; without this the empty wrap's ::before glow
+     collapses into a thin dark line across the frame */
+  .term-wrap[hidden] { display: none; }
   .term-wrap::before { content: ""; position: absolute; inset: -40% -10%; z-index: -1;
     background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, transparent 70%); }
   .term { font-family: 'Anton', 'Be Vietnam Pro', sans-serif; font-size: 150px; line-height: 1.05;
