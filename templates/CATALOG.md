@@ -4,6 +4,11 @@ Each scene in a template-mode `script.json` names a `templateId` below and fills
 `inputs` with the listed slots. The template owns all visual design; you only
 write text. Keep text SHORT — these are poster layouts, not paragraphs.
 
+**Visual first:** images/icons should fill 80–90% of the frame. Use
+`frame-visual-full` for most body scenes; the narration carries the detail.
+Brand/source/logo slots are filled only with what the user gave — leave them
+`""` otherwise (templates hide empty brand bars, chips and URL lines).
+
 Render aspect is set once per script (`"aspect": "9:16"` for TikTok/Shorts).
 
 > Vietnamese: visual text (inputs) keeps normal formatting ("5.5", "82.7%").
@@ -11,6 +16,26 @@ Render aspect is set once per script (`"aspect": "9:16"` for TikTok/Shorts).
 > Emoji/icons (🔥 🚀 → …) are allowed in on-screen `inputs` (they render in colour),
 > but NEVER in `voiceText`. Don't put emoji in char-by-char animated fields
 > (e.g. `hero` of build-minimal).
+
+---
+
+## frame-visual-full
+
+**Role:** body (default) or hook. The visual fills ~85% of the frame: either a
+full-bleed photo with a slow Ken Burns zoom, or (no photo) 1–3 giant emoji icons on a
+coloured radial background. Text is one short caption at the bottom.
+**Best for:** almost every body beat — show the idea, let the voice explain it.
+Renders 7 s of motion, so it stays alive for long narration.
+
+| slot      | type     | limit       | notes                                                                      |
+| --------- | -------- | ----------- | -------------------------------------------------------------------------- |
+| `image`   | string   | path / URL  | full-bleed photo (local file or http(s); the pipeline inlines it). Optional |
+| `icons`   | string[] | 1–3 emoji   | giant illustration; ignored when an `image` is shown (fallback if it fails) |
+| `layout`  | string   | enum        | `single` · `flow` (A → B → C) · `vs` (two sides + VS badge)                 |
+| `labels`  | string[] | ≤10 each    | label under each icon (handy for `vs`)                                      |
+| `caption` | string   | ≤8 words    | bottom caption; wrap `*a word*` to highlight it                             |
+| `kicker`  | string   | ≤16         | small pill on top (optional, e.g. "Mẹo 1")                                  |
+| `tone`    | string   | enum        | `blue` · `warm` · `green` · `purple` · `red` · `dark` (background colour)   |
 
 ---
 
@@ -114,7 +139,10 @@ sweep, tagline, and a footer URL.
 | ------------- | ------ | ----- | ----------------------------------------------------------- |
 | `brand_name`  | string | ≤60   | channel/brand name (big, shimmering)                        |
 | `tagline`     | string | ≤120  | one line under the name                                     |
-| `primary_url` | string | ≤40   | footer URL / source (e.g. "https://aicodingvn.vercel.app/") |
+| `primary_url` | string | ≤40   | footer URL / source — only what the user gave, else `""` (hidden) |
+| `logo`        | string | path / URL | channel logo for the top brand bar (portrait) — only if the user gave one |
+| `brand_label` | string | ≤24   | text next to the logo — only if the user gave it              |
+| `corner_left` / `corner_right` | string | ≤20 | small corner labels (16:9 only), optional             |
 
 ---
 
@@ -127,13 +155,15 @@ subheadline and a rounded CTA pill.
 
 | slot          | type   | limit | notes                                              |
 | ------------- | ------ | ----- | -------------------------------------------------- |
-| `kicker`        | string | ≤24  | small uppercase label, top-left (e.g. "AI Coding")            |
+| `kicker`        | string | ≤24  | small uppercase label, top-left (empty → chip hidden)         |
 | `headline`      | string | ≤60  | the hook line (keep punchy, ~2 short lines) — shown in a vivid gradient |
 | `headline_from` | string | hex  | headline gradient start (optional; default vivid gold→purple) |
 | `headline_to`   | string | hex  | headline gradient end (optional)                              |
 | `subheadline`   | string | ≤120 | one supporting sentence                                       |
 | `cta`           | string | ≤24  | rounded pill label (e.g. "Theo dõi ngay")                    |
-| `brand`         | string | ≤24  | footer-left label (channel/source)                           |
+| `brand`         | string | ≤24  | footer-left label (channel/source) — only if the user gave it |
+| `logo`          | string | path / URL | channel logo in the top brand bar (portrait), optional  |
+| `brand_label`   | string | ≤24  | text next to the logo, optional                               |
 
 > Headline renders in an eye-catching gradient (default gold→orange→pink→purple).
 > Override with `headline_from`/`headline_to` to fit the tone if you want.

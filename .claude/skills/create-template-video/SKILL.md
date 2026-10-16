@@ -1,17 +1,43 @@
 ---
 name: create-template-video
-description: Tạo video tin tức 9:16 bằng TEMPLATE HyperFrames chuyên nghiệp (poster editorial) từ URL bài báo hoặc file .txt tiếng Việt. Trigger khi user muốn tạo video tin tức, làm short news, video kiểu template/poster đẹp, "tạo video template", "làm bản tin kiểu poster", "video chuyên nghiệp". Output: video.mp4 + voice.mp3 + script.txt cho CapCut.
+description: Tạo video ngắn 9:16 (tin tức, kiến thức, động lực…) bằng TEMPLATE HyperFrames, ưu tiên HÌNH ẢNH chiếm 80–90% khung hình, từ URL bài báo, file .txt hoặc một chủ đề tiếng Việt. Trigger khi user muốn tạo video tin tức/kiến thức/động lực, làm short, video kiểu template, "tạo video template", "video chuyên nghiệp". Output: video.mp4 + voice.mp3 + script.txt cho CapCut.
 ---
 
 # Create Template Video Skill
 
-Sinh video tin tức 9:16 dùng các template HyperFrames trong `templates/` (đẹp,
-chuyên nghiệp hơn 6 scene Remotion cũ). Claude chỉ điền **chữ vào slot** của
-template — toàn bộ thiết kế/animation do template lo.
+Sinh video 9:16 dùng các template HyperFrames trong `templates/`. Claude chỉ điền
+**slot** của template (hình, icon, vài chữ) — toàn bộ thiết kế/animation do template lo.
+
+## ⭐ Nguyên tắc số 1: HÌNH là chính, CHỮ là phụ
+
+Người xem nhớ bằng **hình**, không phải bằng chữ. **Hình ảnh/icon phải chiếm
+80–90% khung hình**, chữ trên màn hình chỉ là 1 dòng chú thích ngắn. Thông tin
+chi tiết để **giọng đọc** nói, KHÔNG viết ra màn hình.
+
+- **≥ 70% scene body dùng `frame-visual-full`** (ảnh toàn màn hình hoặc icon khổng lồ).
+- Chữ hiển thị mỗi scene **≤ 8 từ** (caption). Không đoạn văn, không bullet dài.
+- Template nhiều chữ (`frame-aicoding-list`, `frame-aicoding-comparison`,
+  `frame-bold-poster`) **tối đa 1 scene mỗi video**, và chỉ khi thật cần. So sánh
+  2 thứ → ưu tiên `frame-visual-full` với `layout: "vs"`.
+- Mỗi scene chọn 1 hình nói được ý chính: nghe giọng + nhìn hình là hiểu, không cần đọc.
+
+## ⚠️ Nguồn, logo, tên kênh: PHẢI HỎI user trước khi điền
+
+**Không bao giờ tự bịa** dòng "Nguồn: …", logo, tên kênh, URL kênh hay nhãn thương
+hiệu (vd "AI Coding", "Senior AI Engineer"). Trước khi viết script, **hỏi user 1 lần**
+(gộp trong 1 câu hỏi):
+
+1. Tên kênh (hiện ở outro / footer)? — `metadata.channel`, `brand_name`, `brand_label`, `footer_left`…
+2. File logo (đường dẫn ảnh, vd `assets/logo.png`)? — slot `logo`.
+3. Có ghi nguồn không, ghi gì? — `primary_url`, `footer_right`, `brand`, `source`…
+
+User trả lời "không"/bỏ qua → **để trống** các slot đó (`""`): template tự ẩn phần
+trống. Với bài báo từ URL, chỉ ghi domain bài báo làm nguồn khi user đồng ý.
 
 ## Input
 
-1 tham số: URL bài báo (`http://`/`https://`) HOẶC đường dẫn file `.txt`.
+1 tham số: URL bài báo (`http://`/`https://`), đường dẫn file `.txt`, HOẶC một chủ đề
+(vd "video động lực", "mẹo ngủ ngon") → Claude tự viết nội dung từ kiến thức phổ biến.
 
 ## Workflow (theo đúng thứ tự)
 
@@ -38,9 +64,11 @@ Phát hiện input rồi lấy nội dung:
 **Chỉ dùng templateId có trong CATALOG.** Hiện có:
 
 **HOOK (chỉ 1):**
-- `frame-liquid-bg-hero` — hero aurora (blob động + headline + CTA). LUÔN dùng cho scene hook.
+- `frame-visual-full` — **ưu tiên**: 1 hình/icon cực lớn gây tò mò + câu hook ngắn.
+- `frame-liquid-bg-hero` — hero aurora (blob động + headline ngắn) khi hook là 1 câu hỏi mạnh, không có hình hợp.
 
 **BODY (Claude tự chọn theo nội dung — xem Step 5):**
+- `frame-visual-full` — **MẶC ĐỊNH cho body**: ảnh toàn màn hình (Ken Burns) HOẶC 1–3 icon khổng lồ (`single` / `flow` A→B→C / `vs`), chữ chỉ 1 caption ngắn ở đáy.
 - `frame-vignelli` — 1 con số nền tối charcoal + đỏ.
 - `frame-pentagram-stat` — 1 con số nền tối neon (Swiss grid, số cam phát sáng + accent cyan + biểu đồ cột).
 - `frame-bold-poster` — tuyên bố mạnh nhiều dòng + figure số lớn.
@@ -68,7 +96,7 @@ Cấu trúc bắt buộc:
     "metadata": {
         "title": "...",
         "source": { "url": "...", "domain": "...", "image": null },
-        "channel": "AI Coding"
+        "channel": "<tên kênh user đưa, hoặc \"\">"
     },
     "voice": { "provider": "vieneu", "speed": 1.0 },
     "scenes": [
@@ -86,8 +114,13 @@ Cấu trúc bắt buộc:
 
 **Map nội dung → template:**
 
-- hook → **LUÔN `frame-liquid-bg-hero`** (slots: kicker, headline, subheadline, cta, brand). `headline` hiển thị bằng gradient bắt mắt (mặc định vàng→tím); có thể đặt `headline_from`/`headline_to` (2 màu hex) để đổi tông. Không dùng template khác cho hook.
-- **body → Claude TỰ CHỌN template hợp nhất cho từng scene** theo nội dung (ưu tiên ĐA DẠNG — đừng lặp 1 template cho mọi body). Chọn trong:
+- hook → **ưu tiên `frame-visual-full`** (1 icon/ảnh cực lớn + caption hook ngắn), hoặc `frame-liquid-bg-hero` (slots: kicker, headline, subheadline, cta, brand, logo, brand_label; `headline` ≤ 6 từ, gradient tuỳ chỉnh qua `headline_from`/`headline_to`). `kicker`/`brand`/`logo`/`brand_label` chỉ điền khi user đã cung cấp.
+- **body → mặc định `frame-visual-full`** (≥ 70% scene body). Slots: `image`, `icons[]`, `layout`, `labels[]`, `caption`, `kicker`, `tone`:
+    - `image`: ảnh minh hoạ phủ kín khung (đường dẫn file hoặc URL; pipeline tự tải + nhúng). Nguồn ảnh: file user đưa (vd `assets/images/…`), `og:image` của bài báo, hoặc ảnh miễn phí bản quyền (Wikimedia Commons, Unsplash, Pexels — link trực tiếp tới file ảnh). Tải lỗi → tự dùng `icons`.
+    - `icons`: 1–3 emoji to (📱 💡 😴 🔥 🧠 💪 ⏰ 📈 …) — Claude TỰ CHỌN emoji nói đúng ý. `layout`: `single` (1 icon khổng lồ), `flow` (2–3 icon nối mũi tên = nguyên nhân → kết quả / các bước), `vs` (2 icon đối đầu, `labels` = tên 2 vế, ≤ 10 ký tự). Có `image` thì chỉ hiện ảnh; `icons` là phương án dự phòng khi ảnh tải lỗi (nên luôn điền).
+    - `caption`: **≤ 8 từ**, bọc `*từ khoá*` để tô màu nhấn. `kicker`: nhãn nhỏ tuỳ chọn (vd "Mẹo 1", ≤ 16 ký tự).
+    - `tone`: nền khi không có ảnh — `blue` / `warm` / `green` / `purple` / `red` / `dark`; đổi tone giữa các scene cho đỡ nhàm.
+- Chỉ khi scene thật sự là **1 con số** hoặc **1 từ chốt**, có thể xen 1–2 scene template chữ dưới đây (giữ chữ cực ngắn):
     - `frame-vignelli` — scene có **1 con số/stat** muốn nhấn mạnh, tông tối charcoal + đỏ. Slots: kicker, number, label, note, brand.
     - `frame-pentagram-stat` — scene có **1 con số/benchmark**, nền tối neon (Swiss grid, số cam phát sáng + accent cyan) + biểu đồ cột. Slots: label, headline (số), subtitle, anchor, footer_left, footer_right.
     - `frame-build-minimal` — **câu chốt/nhận định ngắn** xoay quanh 1 từ khoá, nền tối + 1 từ lớn in đậm glow cam. Slots: eyebrow, hero (1 từ), desc, side_left, side_right.
@@ -102,7 +135,7 @@ Cấu trúc bắt buộc:
         - `from`/`to`: Claude TỰ CHỌN 2 màu hex gradient cho mỗi vế (thường 2 vế khác tông, vd trái cam→đỏ, phải teal→lam).
         - `icon`: emoji tuỳ chọn cho mỗi vế. `win: true` cho vế thắng (viền sáng + badge WIN). `stat`/`stat_label`: số liệu tuỳ chọn dưới mỗi card.
     - Gợi ý cân bằng: nếu nhiều scene đều là số, xen kẽ `frame-vignelli` (than + đỏ/vàng) và `frame-pentagram-stat` (tối neon cam/cyan) cho đỡ đơn điệu; chèn `frame-build-minimal` cho scene không-số.
-- outro → `frame-logo-outro` (mặc định; slots: brand_name, tagline, primary_url). Dùng `frame-statement-outro` nếu muốn card đỏ nền giấy.
+- outro → `frame-logo-outro` (mặc định; slots: brand_name, tagline, primary_url, logo, brand_label). Dùng `frame-statement-outro` nếu muốn card đỏ nền giấy. **Tên kênh, logo, URL/nguồn lấy từ câu trả lời của user** — không có thì để `""`.
 
 ### ⚠️ Quy tắc TTS tiếng Việt (BẮT BUỘC cho `voiceText`)
 
@@ -138,6 +171,8 @@ Bảng đầy đủ (áp dụng cho `voiceText`):
 ### Step 6: Tự kiểm tra
 
 - scenes[0]=hook, scene cuối=outro; mỗi templateId ∈ CATALOG; mỗi inputs đủ slot bắt buộc;
+- ≥ 70% body là `frame-visual-full`; mỗi caption ≤ 8 từ; không scene nào là đoạn văn trên màn hình;
+- slot nguồn/logo/kênh chỉ chứa đúng điều user đã trả lời (không thì `""`); không có nhãn "9:16"/"16:9" trên màn hình;
 - headline ≤3 dòng & mỗi dòng ngắn; `hero` của `frame-build-minimal` ≤ 2 từ ngắn (vd "BẮT ĐẦU", "KỶ LUẬT") — template tự co chữ cho vừa và chỉ xuống dòng giữa các từ; voiceText đã viết số ra chữ **và KHÔNG chứa emoji/icon**; emoji (nếu có) chỉ nằm trong `inputs`. Sửa thầm tối đa 2 lần.
 
 ### Step 7: Ghi script.json
@@ -178,6 +213,7 @@ Tổng thời lượng: XX.Xs
 
 ## Ghi chú
 
+- Logo/ảnh: slot `image` và `logo` nhận đường dẫn file hoặc URL; pipeline tự nhúng vào lúc render (không cần copy vào thư mục template).
 - Render mỗi scene ~15–20s (Chromium). Video 8–10 scene ~3–5 phút. Cần ffmpeg + Chrome (đã có).
 - Nhạc nền chỉ có trong `video.mp4` (file trung gian `audio-final.mp3`); `voice.mp3` vẫn là giọng + SFX cho CapCut.
 - Đổi giọng: đặt `VIENEU_VOICE` (vd `"Hải Đăng"`, `"Mai Anh"`) khi chạy `tools/vieneu_server.py` hoặc trong `.env.local`; 25 giọng có sẵn xem README VieNeu-TTS. Xoá `voice/scene-*.mp3` để đọc lại bằng giọng mới.

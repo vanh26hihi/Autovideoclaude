@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>Visual Full · Landscape 16:9</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;800;900&display=swap" rel="stylesheet" />
+<style>
+  /*
+   * frame-visual-full — image-first scene: the visual fills ~85% of the frame,
+   * text is one short caption. Either a full-bleed photo (`image`, slow Ken Burns
+   * zoom) or, without one, a giant emoji/icon illustration (`icons`, layout single | flow | vs).
+   * Original to this repo (MIT). Landscape 16:9 (1920×1080).
+   */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b1020; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif; color: #fff;
+    background: radial-gradient(ellipse at 50% 38%, var(--c1) 0%, var(--c2) 58%, var(--c3) 100%); }
+  .tone-blue   { --c1:#2b5cff; --c2:#14246b; --c3:#070b24; --acc:#7dd3fc; }
+  .tone-warm   { --c1:#ff9a3c; --c2:#9a2f12; --c3:#2a0905; --acc:#fde68a; }
+  .tone-green  { --c1:#2fd08a; --c2:#0d5a45; --c3:#04201a; --acc:#bbf7d0; }
+  .tone-purple { --c1:#9b5cff; --c2:#3b1580; --c3:#12062b; --acc:#e9d5ff; }
+  .tone-red    { --c1:#ff4d5e; --c2:#7a0f22; --c3:#22030a; --acc:#fecaca; }
+  .tone-dark   { --c1:#3a4152; --c2:#161a24; --c3:#07080c; --acc:#fbbf24; }
+
+  /* full-bleed photo with Ken Burns */
+  .photo { position: absolute; inset: 0; display: none; background-size: cover; background-position: center;
+    transform-origin: 50% 45%;
+    animation: kb 7s linear forwards, fadeIn 0.6s ease-out forwards; opacity: 0; }
+  @keyframes kb { from { transform: scale(1.02); } to { transform: scale(1.16); } }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* soft rings behind icons */
+  .glow { position: absolute; left: 50%; top: 44%; width: 820px; height: 820px;
+    transform: translate(-50%, -50%); border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 45%, transparent 70%);
+    animation: pulse 3.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.08); } }
+
+  /* the illustration stage: ~85% of the frame */
+  .stage { position: absolute; left: 0; right: 0; top: 90px; bottom: 190px;
+    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 40px; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 18px;
+    opacity: 0; transform: scale(0.6); animation: pop 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .icon { line-height: 1; font-family: 'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;
+    animation: float 3.6s ease-in-out infinite; }
+  .lbl { font-weight: 800; font-size: 46px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--acc); text-shadow: 0 4px 18px rgba(0,0,0,0.5); text-align: center; }
+  @keyframes pop { to { opacity: 1; transform: scale(1); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  .arrow { font-weight: 900; font-size: 130px; color: var(--acc); opacity: 0;
+    text-shadow: 0 0 30px rgba(255,255,255,0.35); animation: pop 0.5s ease-out forwards; }
+  .vs { font-weight: 900; font-size: 130px; font-style: italic; color: #fff; opacity: 0;
+    background: var(--c1); border-radius: 999px; padding: 6px 36px; box-shadow: 0 0 40px var(--c1);
+    animation: pop 0.5s ease-out forwards; }
+
+  /* tiny kicker pill + caption band (text stays a small part of the frame) */
+  .kicker { position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+    font-weight: 800; font-size: 24px; letter-spacing: 4px; text-transform: uppercase;
+    color: #0b1020; background: var(--acc); padding: 10px 28px; border-radius: 999px;
+    opacity: 0; animation: fadeIn 0.6s ease-out 0.3s forwards; white-space: nowrap; }
+  .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 320px;
+    background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 55%, transparent 100%); }
+  .caption { position: absolute; left: 120px; right: 120px; bottom: 56px; text-align: center;
+    font-weight: 900; font-size: 64px; line-height: 1.25; text-shadow: 0 6px 24px rgba(0,0,0,0.7);
+    opacity: 0; transform: translateY(24px); animation: up 0.7s cubic-bezier(0.16,1,0.3,1) 0.9s forwards; }
+  .caption b { color: var(--acc); }
+  @keyframes up { to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="root" class="tone-blue" data-composition-id="main" data-start="0" data-duration="7"
+  data-width="1920" data-height="1080"
+  data-composition-variables='{"image":"","icons":["📱","➡️","😴"],"layout":"flow","labels":[],"caption":"Tắt màn hình, ngủ ngon hơn","kicker":"","tone":"blue"}'>
+  <div class="photo"></div>
+  <div class="glow"></div>
+  <div class="stage"></div>
+  <div class="shade"></div>
+  <div class="kicker" hidden></div>
+  <div class="caption"></div>
+</div>
+<script>
+(function () {
+  var v = window.__hyperframes && typeof window.__hyperframes.getVariables === "function"
+    ? window.__hyperframes.getVariables() : {};
+  var root = document.getElementById("root");
+  var tones = ["blue", "warm", "green", "purple", "red", "dark"];
+  if (tones.indexOf(v.tone) >= 0) root.className = "tone-" + v.tone;
+
+  // caption: plain text; *word* → highlighted in the accent colour
+  var cap = document.querySelector(".caption");
+  String(v.caption || "").split(/(\*[^*]+\*)/).forEach(function (part) {
+    if (!part) return;
+    if (/^\*[^*]+\*$/.test(part)) { var b = document.createElement("b"); b.textContent = part.slice(1, -1); cap.appendChild(b); }
+    else cap.appendChild(document.createTextNode(part));
+  });
+  if (v.kicker) { var k = document.querySelector(".kicker"); k.textContent = v.kicker; k.hidden = false; }
+
+  var stage = document.querySelector(".stage");
+  var glow = document.querySelector(".glow");
+  if (v.image) {
+    // full-bleed photo: the pipeline inlines local/remote images as data: URIs
+    var ph = document.querySelector(".photo");
+    // a CSS background, not <img>: HyperFrames treats <img> as a timed media clip
+    ph.style.backgroundImage = 'url("' + String(v.image).replace(/"/g, "%22") + '")';
+    ph.style.display = "block";
+    glow.hidden = true;
+    // the photo IS the visual; icons are only the fallback when there is no image
+    // (giant colour-emoji glyphs over a raster layer also stall HyperFrames' capture)
+    return;
+  }
+
+  var icons = Array.isArray(v.icons) ? v.icons.slice(0, 3) : (v.icons ? [String(v.icons)] : []);
+  if (!icons.length) return;
+  var labels = Array.isArray(v.labels) ? v.labels : [];
+  var layout = v.layout === "vs" ? "vs" : (icons.length > 1 ? "flow" : "single");
+  if (v.layout === "single") icons = icons.slice(0, 1), layout = "single";
+  var size = { single: 600, flow: icons.length === 3 ? 330 : 420, vs: 400 }[layout];
+  var delay = 0.25;
+  icons.forEach(function (ic, i) {
+    if (i > 0) {
+      var sep = document.createElement("div");
+      sep.className = layout === "vs" ? "vs" : "arrow";
+      sep.textContent = layout === "vs" ? "VS" : "→";
+      sep.style.animationDelay = (delay + 0.15).toFixed(2) + "s";
+      stage.appendChild(sep);
+      delay += 0.35;
+    }
+    var item = document.createElement("div");
+    item.className = "item";
+    item.style.animationDelay = delay.toFixed(2) + "s";
+    var icon = document.createElement("div");
+    icon.className = "icon";
+    icon.textContent = ic;
+    icon.style.fontSize = size + "px";
+    icon.style.animationDelay = (i * 0.6) + "s";
+    item.appendChild(icon);
+    if (labels[i]) { var l = document.createElement("div"); l.className = "lbl"; l.textContent = labels[i]; item.appendChild(l); }
+    stage.appendChild(item);
+    delay += 0.35;
+  });
+})();
+window.__timelines = window.__timelines || {};
+window.__timelines["main"] = { pause: function () {}, seek: function () {}, paused: function () { return true; } };
+</script>
+</body>
+</html>

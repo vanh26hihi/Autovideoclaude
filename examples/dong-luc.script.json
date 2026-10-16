@@ -81,7 +81,7 @@
       "id": "outro", "type": "outro",
       "voiceText": "Theo dõi kênh để mỗi ngày có thêm một lý do để tiến lên nhé.",
       "templateId": "frame-logo-outro",
-      "inputs": { "brand_name": "Kiến Thức Mỗi Ngày", "tagline": "Mỗi ngày tiến lên một chút", "primary_url": "Nguồn: Atomic Habits · HBR" }
+      "inputs": { "brand_name": "Kiến Thức Mỗi Ngày", "tagline": "Mỗi ngày tiến lên một chút", "primary_url": "" }
     }
   ]
 }

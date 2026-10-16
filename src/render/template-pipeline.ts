@@ -14,6 +14,7 @@ import {
 } from "../assets/audio-tools.js";
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
 import { composeTemplate } from "./template-composer.js";
+import { inlineSceneImage } from "../assets/image-inline.js";
 import { fitClipToDuration, concatVideos, muxAudioOntoVideo } from "./video-tools.js";
 import { log } from "../utils/logger.js";
 
@@ -148,7 +149,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
     } else {
       await composeTemplate({
         templateId: scene.templateId,
-        inputs: scene.inputs,
+        inputs: await inlineSceneImage(scene.inputs, clipsDir, scene.id),
         aspect: script.aspect,
         outputPath: rawClip,
         fps: RENDER_FPS,
