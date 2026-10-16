@@ -217,6 +217,7 @@ The default voice is [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS), runni
 TTS_PROVIDER=vieneu
 VIENEU_ENDPOINT=http://127.0.0.1:8124
 VIENEU_VOICE=Thiện Minh
+VIENEU_SPEED=1.15   # server reading speed (1.0 = original)
 ```
 
 Start the voice server before running the pipeline (the first run downloads the model):

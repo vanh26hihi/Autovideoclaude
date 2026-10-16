@@ -78,6 +78,7 @@ Cấu trúc bắt buộc:
 ```
 
 - `music` (tuỳ chọn): nhạc nền lồng dưới giọng đọc — `{ "file": "assets/music/<tên>.mp3", "volume": 0.15, "fadeOutSec": 2 }`. Bỏ trống → dùng `assets/music/default.mp3` nếu có; `"file": "none"` để tắt. Nhạc tự lặp cho đủ độ dài, tự hạ nhỏ khi có giọng, fade in/out. Video buồn/cảm xúc → volume 0.12–0.18; video sôi động → 0.18–0.25. **Không tự tải nhạc từ YouTube/Zing/Spotify** (nhạc có bản quyền) — chỉ dùng file user cung cấp hoặc nhạc miễn phí bản quyền.
+- `speed`: hệ số nhân tốc độ đọc trên nền mặc định của server (`VIENEU_SPEED`, mặc định 1.15 — nhịp tự nhiên cho video ngắn). Để `1.0`; chỉ tăng (vd 1.1) khi muốn nhanh hơn nữa.
 - `provider`: `vieneu` (mặc định — VieNeu-TTS, giọng **Thiện Minh**, nam miền Bắc, giọng kể chuyện). Giọng do server quyết định (`VIENEU_VOICE`), không cần `voiceId`/API key. `omnivoice` chỉ dùng khi user yêu cầu (đặt `TTS_PROVIDER=omnivoice` trong `.env.local`).
 - Mỗi scene: `{ id, type, voiceText, templateId, inputs }`. `inputs` khớp slot trong CATALOG.
 - scenes[0].type = `hook`; scene cuối .type = `outro` (templateId = `frame-logo-outro`).
@@ -137,7 +138,7 @@ Bảng đầy đủ (áp dụng cho `voiceText`):
 ### Step 6: Tự kiểm tra
 
 - scenes[0]=hook, scene cuối=outro; mỗi templateId ∈ CATALOG; mỗi inputs đủ slot bắt buộc;
-- headline ≤3 dòng & mỗi dòng ngắn; voiceText đã viết số ra chữ **và KHÔNG chứa emoji/icon**; emoji (nếu có) chỉ nằm trong `inputs`. Sửa thầm tối đa 2 lần.
+- headline ≤3 dòng & mỗi dòng ngắn; `hero` của `frame-build-minimal` ≤ 2 từ ngắn (vd "BẮT ĐẦU", "KỶ LUẬT") — template tự co chữ cho vừa và chỉ xuống dòng giữa các từ; voiceText đã viết số ra chữ **và KHÔNG chứa emoji/icon**; emoji (nếu có) chỉ nằm trong `inputs`. Sửa thầm tối đa 2 lần.
 
 ### Step 7: Ghi script.json
 

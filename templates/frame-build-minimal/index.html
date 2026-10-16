@@ -96,16 +96,16 @@
                 animation: fade 1s ease-out 1.8s forwards;
             }
             .side-left {
-                left: 72px;
+                left: 36px;
                 top: 50%;
-                transform: translateY(-50%) rotate(-90deg);
-                transform-origin: center;
+                writing-mode: vertical-rl;
+                transform: translateY(-50%) rotate(180deg);
             }
             .side-right {
-                right: 72px;
+                right: 36px;
                 top: 50%;
-                transform: translateY(-50%) rotate(90deg);
-                transform-origin: center;
+                writing-mode: vertical-rl;
+                transform: translateY(-50%);
             }
             @keyframes fade {
                 to {
@@ -146,6 +146,13 @@
                 text-shadow:
                     0 0 80px rgba(255, 150, 46, 0.4),
                     0 4px 30px rgba(0, 0, 0, 0.45);
+            }
+            .hero {
+                align-self: stretch;
+            }
+            .hero .word {
+                display: inline-block;
+                white-space: nowrap;
             }
             .hero .ch {
                 display: inline-block;
@@ -364,25 +371,49 @@
                 var hero = document.getElementById("hero");
                 if (hero && v.hero != null) {
                     hero.textContent = "";
-                    var chars = Array.from(String(v.hero));
-                    chars.forEach(function (c, i) {
-                        var span = document.createElement("span");
-                        span.className = "ch";
-                        span.textContent = c === " " ? " " : c;
-                        span.style.animationDelay =
-                            (0.6 + i * 0.06).toFixed(2) + "s";
-                        hero.appendChild(span);
+                    /* Group chars per word: lines may only break BETWEEN words, never inside one. */
+                    var words = String(v.hero).trim().split(/\s+/);
+                    var i = 0;
+                    words.forEach(function (w, wi) {
+                        if (wi > 0) hero.appendChild(document.createTextNode(" "));
+                        var word = document.createElement("span");
+                        word.className = "word";
+                        Array.from(w).forEach(function (c) {
+                            var span = document.createElement("span");
+                            span.className = "ch";
+                            span.textContent = c;
+                            span.style.animationDelay =
+                                (0.6 + i++ * 0.06).toFixed(2) + "s";
+                            word.appendChild(span);
+                        });
+                        hero.appendChild(word);
                     });
 
-                    /* Auto-scale hero to fit container width */
+                    /* Auto-scale: shrink until the widest word fits the available width.
+                       Re-run once web fonts load (measuring with the fallback font under-sizes). */
                     var maxPx = 240, minPx = 60;
-                    hero.style.whiteSpace = "nowrap";
-                    hero.style.fontSize = maxPx + "px";
-                    if (hero.scrollWidth > hero.offsetWidth) {
-                        var sized = Math.max(minPx, Math.floor(maxPx * hero.offsetWidth / hero.scrollWidth));
-                        hero.style.fontSize = sized + "px";
-                    }
-                    hero.style.whiteSpace = "";
+                    var oneLinePx = 120; /* keep a short phrase on one line down to this size */
+                    var fit = function () {
+                        hero.style.fontSize = maxPx + "px";
+                        hero.style.whiteSpace = "nowrap";
+                        var avail = hero.clientWidth;
+                        var total = hero.scrollWidth;
+                        var widest = 0;
+                        hero.querySelectorAll(".word").forEach(function (el) {
+                            widest = Math.max(widest, el.scrollWidth);
+                        });
+                        if (avail <= 0) { hero.style.whiteSpace = ""; return; }
+                        var lineSize = Math.floor(maxPx * Math.min(1, avail / total * 0.97));
+                        if (lineSize >= oneLinePx) {
+                            hero.style.fontSize = lineSize + "px";
+                            return; /* stays nowrap: one line */
+                        }
+                        hero.style.whiteSpace = "";
+                        hero.style.fontSize =
+                            Math.max(minPx, Math.floor(maxPx * Math.min(1, avail / widest * 0.97))) + "px";
+                    };
+                    fit();
+                    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
                 }
             })();
             window.__timelines = window.__timelines || {};

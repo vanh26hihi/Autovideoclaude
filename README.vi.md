@@ -217,6 +217,7 @@ Giọng đọc mặc định là [VieNeu-TTS](https://github.com/pnnbao97/VieNeu
 TTS_PROVIDER=vieneu
 VIENEU_ENDPOINT=http://127.0.0.1:8124
 VIENEU_VOICE=Thiện Minh
+VIENEU_SPEED=1.15   # tốc độ đọc của server (1.0 = gốc)
 ```
 
 Khởi động server giọng đọc trước khi chạy pipeline (lần đầu sẽ tải model):

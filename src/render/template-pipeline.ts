@@ -64,7 +64,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
 
   // STEP 3 — TTS per scene (idempotent)
   log.step(3, TOTAL_STEPS, "TTS each scene");
-  const ttsClient = createTtsClient(cfg);
+  const ttsClient = createTtsClient(cfg, { speed: script.voice.speed });
   const limit = pLimit(cfg.ttsConcurrency);
   const voiceDir = join(outputDir, "voice");
   await mkdir(voiceDir, { recursive: true });
