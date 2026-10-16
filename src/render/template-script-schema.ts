@@ -47,7 +47,8 @@ export const TemplateScriptSchema = z.object({
       domain: z.string(),
       image: z.string().url().nullable(),
     }),
-    channel: z.string().min(1),
+    /** Channel name the user gave; "" when they chose none (never invented). */
+    channel: z.string().default(""),
   }),
   voice: z.object({
     provider: z.enum(["vieneu", "omnivoice"]).default("vieneu"),
