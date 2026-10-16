@@ -28,6 +28,14 @@ const TemplateScene = z.object({
 });
 export type TemplateSceneType = z.infer<typeof TemplateScene>;
 
+/** Background music bed. `file` is relative to the repo root (or absolute); "none" disables it. */
+const MusicSpec = z.object({
+  file: z.string().min(1),
+  volume: z.number().min(0).max(1).default(0.15),
+  fadeOutSec: z.number().min(0).default(2),
+});
+export type TplMusicSpecType = z.infer<typeof MusicSpec>;
+
 export const TemplateScriptSchema = z.object({
   version: z.literal("1.0"),
   /** Discriminator: marks this as a HyperFrames-template script. */
@@ -45,6 +53,8 @@ export const TemplateScriptSchema = z.object({
     provider: z.enum(["vieneu", "omnivoice"]).default("vieneu"),
     speed: z.number().min(0.5).max(2.0),
   }),
+  /** Optional background music (else BG_MUSIC_FILE / assets/music/default.mp3 if present). */
+  music: MusicSpec.optional(),
   /** Output aspect for every scene (templates render a matching composition). */
   aspect: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
   scenes: z

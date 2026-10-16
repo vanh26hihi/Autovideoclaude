@@ -77,6 +77,7 @@ Cấu trúc bắt buộc:
 }
 ```
 
+- `music` (tuỳ chọn): nhạc nền lồng dưới giọng đọc — `{ "file": "assets/music/<tên>.mp3", "volume": 0.15, "fadeOutSec": 2 }`. Bỏ trống → dùng `assets/music/default.mp3` nếu có; `"file": "none"` để tắt. Nhạc tự lặp cho đủ độ dài, tự hạ nhỏ khi có giọng, fade in/out. Video buồn/cảm xúc → volume 0.12–0.18; video sôi động → 0.18–0.25. **Không tự tải nhạc từ YouTube/Zing/Spotify** (nhạc có bản quyền) — chỉ dùng file user cung cấp hoặc nhạc miễn phí bản quyền.
 - `provider`: `vieneu` (mặc định — VieNeu-TTS, giọng **Thiện Minh**, nam miền Bắc, giọng kể chuyện). Giọng do server quyết định (`VIENEU_VOICE`), không cần `voiceId`/API key. `omnivoice` chỉ dùng khi user yêu cầu (đặt `TTS_PROVIDER=omnivoice` trong `.env.local`).
 - Mỗi scene: `{ id, type, voiceText, templateId, inputs }`. `inputs` khớp slot trong CATALOG.
 - scenes[0].type = `hook`; scene cuối .type = `outro` (templateId = `frame-logo-outro`).
@@ -177,6 +178,7 @@ Tổng thời lượng: XX.Xs
 ## Ghi chú
 
 - Render mỗi scene ~15–20s (Chromium). Video 8–10 scene ~3–5 phút. Cần ffmpeg + Chrome (đã có).
+- Nhạc nền chỉ có trong `video.mp4` (file trung gian `audio-final.mp3`); `voice.mp3` vẫn là giọng + SFX cho CapCut.
 - Đổi giọng: đặt `VIENEU_VOICE` (vd `"Hải Đăng"`, `"Mai Anh"`) khi chạy `tools/vieneu_server.py` hoặc trong `.env.local`; 25 giọng có sẵn xem README VieNeu-TTS. Xoá `voice/scene-*.mp3` để đọc lại bằng giọng mới.
 - TTS idempotent (giữ `voice/scene-*.mp3`); clip cũng idempotent (giữ `clips/scene-*.mp4`) — xoá để render lại sau khi sửa inputs.
 - Thêm template mới: làm theo mục cuối `templates/CATALOG.md` rồi bổ sung 1 dòng vào catalog.

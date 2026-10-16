@@ -228,6 +228,8 @@ python tools/vieneu_server.py
 
 OmniVoice still works: set `TTS_PROVIDER=omnivoice` and `OMNIVOICE_ENDPOINT=http://127.0.0.1:8123`. Both servers accept `POST /tts` with `{ text }` and return `audio/mpeg` bytes.
 
+**Background music (optional):** put a track at `assets/music/default.mp3` and every video gets a music bed (looped, ducked under the narration, faded in/out). Override per video with `"music": { "file": "...", "volume": 0.15 }` in `script.json`, or `BG_MUSIC_FILE` / `BG_MUSIC_VOLUME` in `.env.local`. Only use music you have the rights to.
+
 </details>
 
 ---
