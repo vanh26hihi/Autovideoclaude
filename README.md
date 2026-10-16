@@ -13,7 +13,7 @@ One command · zero editing · deterministic renders.</p>
 <img alt="Node" src="https://img.shields.io/badge/Node-%E2%89%A522-339933?style=flat-square&logo=node.js&logoColor=white" />
 <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white" />
 <img alt="HyperFrames" src="https://img.shields.io/badge/HyperFrames-0.6.94-ec4899?style=flat-square" />
-<img alt="OmniVoice" src="https://img.shields.io/badge/TTS-OmniVoice-f59e0b?style=flat-square" />
+<img alt="VieNeu-TTS" src="https://img.shields.io/badge/TTS-VieNeu--TTS-f59e0b?style=flat-square" />
 <img alt="Format" src="https://img.shields.io/badge/9%3A16-1080%C3%971920-0ea5e9?style=flat-square" />
 <img alt="License" src="https://img.shields.io/badge/License-MIT-10b981?style=flat-square" />
 </p>
@@ -32,7 +32,7 @@ One command · zero editing · deterministic renders.</p>
 ---
 
 <div align="center">
-<img src="./assets/pipeline.svg" alt="url / .txt → Claude Code (/create-template-video) → pipeline (OmniVoice · SFX · HyperFrames · FFmpeg) → video.mp4 + voice.mp3 + script.txt" width="860" />
+<img src="./assets/pipeline.svg" alt="url / .txt → Claude Code (/create-template-video) → pipeline (VieNeu-TTS · SFX · HyperFrames · FFmpeg) → video.mp4 + voice.mp3 + script.txt" width="860" />
 </div>
 
 > **The split that makes it reliable:** AI handles _content_ (the script + template choices),
@@ -102,7 +102,7 @@ Setup &nbsp;·&nbsp; Tổng hợp email &nbsp;·&nbsp; Lên lịch chạy tự �
 git clone https://github.com/huytranvan2010/AI-auto-generate-video.git
 cd AI-auto-generate-video
 npm install
-# start your local OmniVoice server, then generate video
+# start the voice server: pip install vieneu && python tools/vieneu_server.py, then generate video
 ```
 
 <table>
@@ -153,7 +153,7 @@ flowchart LR
     A["📰 URL / .txt"] -->|/create-template-video| B[Claude Code]
     B -->|fetch + write text| C["script.json<br/>renderer: hyperframes"]
     C -->|Zod validate| D[Template Pipeline]
-    D -->|TTS per scene| E[OmniVoice]
+    D -->|TTS per scene| E[VieNeu-TTS]
     E -->|concat + SFX mix| F[voice.mp3]
     D -->|render each template| G["HyperFrames<br/>Chromium"]
     G -->|fit clip to narration| H["clips/scene-*.mp4"]
@@ -174,7 +174,7 @@ Eight deterministic steps in [`src/render/template-pipeline.ts`](src/render/temp
 | --- | ---------------- | ------------------------------------------------------------- |
 | 1   | **Validate**     | `script.json` checked against the Zod schema                  |
 | 2   | **Caption text** | `script.txt` — all `voiceText` joined (CapCut auto-caption)   |
-| 3   | **TTS / scene**  | `voice/scene-<id>.mp3` via OmniVoice _(idempotent)_           |
+| 3   | **TTS / scene**  | `voice/scene-<id>.mp3` via VieNeu-TTS _(idempotent)_           |
 | 4   | **Concat voice** | `voice-raw.mp3` with 0.3s gaps + per-scene start times        |
 | 5   | **SFX mix**      | `voice.mp3` — sound effects layered onto the narration        |
 | 6   | **Render clips** | `clips/scene-<id>-fit.mp4` — template → MP4, fit to narration |
@@ -195,7 +195,7 @@ Eight deterministic steps in [`src/render/template-pipeline.ts`](src/render/temp
 | **Node.js**           | ≥ 22       | `node --version`                                                    |
 | **FFmpeg + ffprobe**  | any modern | must be in PATH (`ffmpeg -version`)                                 |
 | **Chrome / Chromium** | any        | used by HyperFrames to render each template                         |
-| **OmniVoice server**  | running    | local TTS at `OMNIVOICE_ENDPOINT` (default `http://127.0.0.1:8123`) |
+| **VieNeu-TTS server** | running    | `python tools/vieneu_server.py` (needs `pip install vieneu`, Python 3.10–3.12) — default `http://127.0.0.1:8124`, voice **Thiện Minh** |
 | **Claude Code CLI**   | optional   | only for the `/create-template-video` skill                         |
 
 **Install FFmpeg:**
@@ -211,14 +211,22 @@ Eight deterministic steps in [`src/render/template-pipeline.ts`](src/render/temp
 
 <br/>
 
-OmniVoice is the only TTS provider, and it's local — **no API keys.**
+The default voice is [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS), running locally with the **Thiện Minh** preset (male, Northern accent) — **no API keys.** Set `VIENEU_VOICE` to use another of its 25 presets.
 
 ```env
-TTS_PROVIDER=omnivoice
-OMNIVOICE_ENDPOINT=http://127.0.0.1:8123
+TTS_PROVIDER=vieneu
+VIENEU_ENDPOINT=http://127.0.0.1:8124
+VIENEU_VOICE=Thiện Minh
 ```
 
-The server must accept `POST /tts` with `{ text }` and return `audio/mpeg` bytes.
+Start the voice server before running the pipeline (the first run downloads the model):
+
+```bash
+pip install vieneu
+python tools/vieneu_server.py
+```
+
+OmniVoice still works: set `TTS_PROVIDER=omnivoice` and `OMNIVOICE_ENDPOINT=http://127.0.0.1:8123`. Both servers accept `POST /tts` with `{ text }` and return `audio/mpeg` bytes.
 
 </details>
 
@@ -262,7 +270,7 @@ npm run pipeline -- output/<slug>/script.json
         },
         "channel": "AI Coding"
     },
-    "voice": { "provider": "omnivoice", "speed": 1.0 },
+    "voice": { "provider": "vieneu", "speed": 1.0 },
     "scenes": [
         {
             "id": "hook",
@@ -393,7 +401,7 @@ No `assets/sfx/`? The pipeline just renders without SFX.
 | ----------------- | ----------------------------------------------------------------------------------------- |
 | **Runtime**       | Node ≥22 · TypeScript 6 · ESM · [tsx](https://github.com/privatenumber/tsx)               |
 | **Render**        | [HyperFrames](https://www.npmjs.com/package/hyperframes) `0.6.94` (HTML→MP4 via Chromium) |
-| **TTS**           | OmniVoice (local)                                                                         |
+| **TTS**           | VieNeu-TTS (local)                                                                        |
 | **Schema**        | [Zod](https://zod.dev) ^4                                                                 |
 | **HTTP**          | axios + [nock](https://github.com/nock/nock)                                              |
 | **Concurrency**   | [p-limit](https://github.com/sindresorhus/p-limit)                                        |
@@ -406,6 +414,7 @@ No `assets/sfx/`? The pipeline just renders without SFX.
 ## 🙏 Acknowledgements
 
 - [HyperFrames](https://www.npmjs.com/package/hyperframes) — the HTML-to-video engine behind the templates
+- [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS) — default local Vietnamese text-to-speech (voice: Thiện Minh)
 - [OmniVoice](https://github.com/k2-fsa/OmniVoice) — local Vietnamese text-to-speech
 - [html-video](https://github.com/nexu-io/html-video) — HTML-to-video approach this project builds on
 - [Auto-Create-Video](https://github.com/hoquanghai/Auto-Create-Video) — the original project this is based on

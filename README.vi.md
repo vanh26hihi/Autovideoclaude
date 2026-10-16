@@ -13,7 +13,7 @@ Một câu lệnh, không cần dựng phim, chạy lại bao nhiêu lần cũng
 <img alt="Node" src="https://img.shields.io/badge/Node-%E2%89%A522-339933?style=flat-square&logo=node.js&logoColor=white" />
 <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white" />
 <img alt="HyperFrames" src="https://img.shields.io/badge/HyperFrames-0.6.94-ec4899?style=flat-square" />
-<img alt="OmniVoice" src="https://img.shields.io/badge/TTS-OmniVoice-f59e0b?style=flat-square" />
+<img alt="VieNeu-TTS" src="https://img.shields.io/badge/TTS-VieNeu--TTS-f59e0b?style=flat-square" />
 <img alt="Format" src="https://img.shields.io/badge/9%3A16-1080%C3%971920-0ea5e9?style=flat-square" />
 <img alt="License" src="https://img.shields.io/badge/License-MIT-10b981?style=flat-square" />
 </p>
@@ -32,7 +32,7 @@ Một câu lệnh, không cần dựng phim, chạy lại bao nhiêu lần cũng
 ---
 
 <div align="center">
-<img src="./assets/pipeline.svg" alt="url / .txt → Claude Code (/create-template-video) → pipeline (OmniVoice · SFX · HyperFrames · FFmpeg) → video.mp4 + voice.mp3 + script.txt" width="860" />
+<img src="./assets/pipeline.svg" alt="url / .txt → Claude Code (/create-template-video) → pipeline (VieNeu-TTS · SFX · HyperFrames · FFmpeg) → video.mp4 + voice.mp3 + script.txt" width="860" />
 </div>
 
 > **Vì sao nó đáng tin:** AI chỉ lo phần _nội dung_ (viết kịch bản, chọn template), còn việc
@@ -102,7 +102,7 @@ Setup &nbsp;·&nbsp; Tổng hợp email &nbsp;·&nbsp; Lên lịch chạy tự �
 git clone https://github.com/huytranvan2010/AI-auto-generate-video.git
 cd AI-auto-generate-video
 npm install
-# chạy server OmniVoice ở máy bạn, rồi tạo video
+# chạy server giọng đọc: pip install vieneu && python tools/vieneu_server.py, rồi tạo video
 ```
 
 <table>
@@ -153,7 +153,7 @@ flowchart LR
     A["📰 URL / .txt"] -->|/create-template-video| B[Claude Code]
     B -->|đọc + viết chữ| C["script.json<br/>renderer: hyperframes"]
     C -->|Zod kiểm tra| D[Template Pipeline]
-    D -->|TTS từng scene| E[OmniVoice]
+    D -->|TTS từng scene| E[VieNeu-TTS]
     E -->|ghép + trộn SFX| F[voice.mp3]
     D -->|render từng template| G["HyperFrames<br/>Chromium"]
     G -->|fit clip theo giọng| H["clips/scene-*.mp4"]
@@ -174,7 +174,7 @@ Pipeline chạy 8 bước, lần nào cũng như lần nấy — code ở [`src/
 | --- | ------------------ | ------------------------------------------------------------- |
 | 1   | **Kiểm tra**       | `script.json` được validate theo schema Zod                   |
 | 2   | **Văn bản phụ đề** | `script.txt` — gộp toàn bộ `voiceText` (CapCut auto-caption)  |
-| 3   | **TTS / scene**    | `voice/scene-<id>.mp3` qua OmniVoice _(idempotent)_           |
+| 3   | **TTS / scene**    | `voice/scene-<id>.mp3` qua VieNeu-TTS _(idempotent)_           |
 | 4   | **Ghép giọng**     | `voice-raw.mp3` chèn 0.3s nghỉ + tính mốc thời gian mỗi scene |
 | 5   | **Trộn SFX**       | `voice.mp3` — chèn hiệu ứng âm thanh lên giọng đọc            |
 | 6   | **Render clip**    | `clips/scene-<id>-fit.mp4` — template → MP4, fit theo giọng   |
@@ -195,7 +195,7 @@ Pipeline chạy 8 bước, lần nào cũng như lần nấy — code ở [`src/
 | **Node.js**           | ≥ 22      | `node --version`                                                      |
 | **FFmpeg + ffprobe**  | bản mới   | phải có trong PATH (`ffmpeg -version`)                                |
 | **Chrome / Chromium** | bất kỳ    | HyperFrames dùng để render từng template                              |
-| **OmniVoice server**  | đang chạy | TTS local tại `OMNIVOICE_ENDPOINT` (mặc định `http://127.0.0.1:8123`) |
+| **VieNeu-TTS server** | đang chạy | `python tools/vieneu_server.py` (cần `pip install vieneu`, Python 3.10–3.12) — mặc định `http://127.0.0.1:8124`, giọng **Thiện Minh** |
 | **Claude Code CLI**   | tuỳ chọn  | chỉ cần cho skill `/create-template-video`                            |
 
 **Cài FFmpeg:**
@@ -211,14 +211,22 @@ Pipeline chạy 8 bước, lần nào cũng như lần nấy — code ở [`src/
 
 <br/>
 
-Ở đây chỉ có mỗi OmniVoice, lại chạy ngay trên máy nên **chẳng cần API key gì cả.**
+Giọng đọc mặc định là [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS) chạy ngay trên máy, giọng **Thiện Minh** (nam, miền Bắc) — **không cần API key.** Muốn đổi giọng thì đặt `VIENEU_VOICE` (25 giọng có sẵn: Hải Đăng, Mai Anh, Trúc Ly, …).
 
 ```env
-TTS_PROVIDER=omnivoice
-OMNIVOICE_ENDPOINT=http://127.0.0.1:8123
+TTS_PROVIDER=vieneu
+VIENEU_ENDPOINT=http://127.0.0.1:8124
+VIENEU_VOICE=Thiện Minh
 ```
 
-Server chỉ cần nhận `POST /tts` kèm `{ text }` và trả về bytes `audio/mpeg` là đủ.
+Khởi động server giọng đọc trước khi chạy pipeline (lần đầu sẽ tải model):
+
+```bash
+pip install vieneu
+python tools/vieneu_server.py
+```
+
+Vẫn dùng được OmniVoice: đặt `TTS_PROVIDER=omnivoice` và `OMNIVOICE_ENDPOINT=http://127.0.0.1:8123`. Cả hai server đều nhận `POST /tts` kèm `{ text }` và trả về bytes `audio/mpeg`.
 
 </details>
 
@@ -261,7 +269,7 @@ npm run pipeline -- output/<slug>/script.json
         },
         "channel": "AI Coding"
     },
-    "voice": { "provider": "omnivoice", "speed": 1.0 },
+    "voice": { "provider": "vieneu", "speed": 1.0 },
     "scenes": [
         {
             "id": "hook",
@@ -393,7 +401,7 @@ Chưa tải `assets/sfx/` cũng chẳng sao — pipeline vẫn render ngon, ch�
 | --------------- | ----------------------------------------------------------------------------------------- |
 | **Runtime**     | Node ≥22 · TypeScript 6 · ESM · [tsx](https://github.com/privatenumber/tsx)               |
 | **Render**      | [HyperFrames](https://www.npmjs.com/package/hyperframes) `0.6.94` (HTML→MP4 qua Chromium) |
-| **TTS**         | OmniVoice (local)                                                                         |
+| **TTS**         | VieNeu-TTS (local)                                                                        |
 | **Schema**      | [Zod](https://zod.dev) ^4                                                                 |
 | **HTTP**        | axios + [nock](https://github.com/nock/nock)                                              |
 | **Concurrency** | [p-limit](https://github.com/sindresorhus/p-limit)                                        |
@@ -406,6 +414,7 @@ Chưa tải `assets/sfx/` cũng chẳng sao — pipeline vẫn render ngon, ch�
 ## 🙏 Ghi nhận
 
 - [HyperFrames](https://www.npmjs.com/package/hyperframes) — engine HTML-to-video đứng sau các template
+- [VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS) — giọng đọc mặc định, chạy local (giọng Thiện Minh)
 - [OmniVoice](https://github.com/k2-fsa/OmniVoice) — text-to-speech tiếng Việt chạy local
 - [html-video](https://github.com/nexu-io/html-video) — ý tưởng HTML-to-video mà dự án này học theo
 - [Auto-Create-Video](https://github.com/hoquanghai/Auto-Create-Video) — dự án gốc mà bản này kế thừa và phát triển lên

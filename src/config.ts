@@ -1,9 +1,14 @@
 import "dotenv/config";
 
-export type TtsProvider = "omnivoice";
+export type TtsProvider = "vieneu" | "omnivoice";
+const PROVIDERS: TtsProvider[] = ["vieneu", "omnivoice"];
 
 export interface Config {
     ttsProvider: TtsProvider;
+
+    // VieNeu-TTS (local server: tools/vieneu_server.py)
+    vieneuEndpoint: string;
+    vieneuVoice: string;
 
     // OmniVoice (local TTS server)
     omnivoiceEndpoint: string;
@@ -21,15 +26,18 @@ function intDefault(name: string, def: number): number {
 }
 
 export function loadConfig(): Config {
-    const provider = (process.env.TTS_PROVIDER ?? "omnivoice") as TtsProvider;
-    if (provider !== "omnivoice") {
+    const provider = (process.env.TTS_PROVIDER ?? "vieneu") as TtsProvider;
+    if (!PROVIDERS.includes(provider)) {
         throw new Error(
-            `TTS_PROVIDER must be "omnivoice", got "${provider}"`,
+            `TTS_PROVIDER must be one of ${PROVIDERS.join(", ")}, got "${provider}"`,
         );
     }
 
     return {
         ttsProvider: provider,
+        vieneuEndpoint:
+            process.env.VIENEU_ENDPOINT ?? "http://127.0.0.1:8124",
+        vieneuVoice: process.env.VIENEU_VOICE ?? "Thiện Minh",
         omnivoiceEndpoint:
             process.env.OMNIVOICE_ENDPOINT ?? "http://127.0.0.1:8123",
         ttsConcurrency: intDefault("TTS_CONCURRENCY", 1),

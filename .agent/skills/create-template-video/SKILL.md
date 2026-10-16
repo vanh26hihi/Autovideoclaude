@@ -70,14 +70,14 @@ Cấu trúc bắt buộc:
         "source": { "url": "...", "domain": "...", "image": null },
         "channel": "AI Coding"
     },
-    "voice": { "provider": "omnivoice", "speed": 1.0 },
+    "voice": { "provider": "vieneu", "speed": 1.0 },
     "scenes": [
         /* 8–12 scene: 1 hook + 6–10 body + 1 outro */
     ]
 }
 ```
 
-- `provider`: luôn là `omnivoice` (TTS local duy nhất; không cần `voiceId`/API key).
+- `provider`: `vieneu` (mặc định — VieNeu-TTS, giọng **Thiện Minh**, nam miền Bắc, giọng kể chuyện). Giọng do server quyết định (`VIENEU_VOICE`), không cần `voiceId`/API key. `omnivoice` chỉ dùng khi user yêu cầu (đặt `TTS_PROVIDER=omnivoice` trong `.env.local`).
 - Mỗi scene: `{ id, type, voiceText, templateId, inputs }`. `inputs` khớp slot trong CATALOG.
 - scenes[0].type = `hook`; scene cuối .type = `outro` (templateId = `frame-logo-outro`).
 - **8–12 scene**; tổng voiceText ~270–360 từ (~90–120s) — **GIỮ NGUYÊN tổng thời lượng**, chỉ chia nhỏ ra NHIỀU scene hơn cho nhịp nhanh, đỡ nhàm. Mỗi body scene **~25–40 từ** (mỗi scene chỉ 1 ý duy nhất — nếu 1 đoạn có 2 ý thì TÁCH thành 2 scene thay vì nhồi vào 1). Mục tiêu: mỗi scene xuất hiện trên màn hình chỉ ~6–10s rồi chuyển cảnh.
@@ -104,7 +104,7 @@ Cấu trúc bắt buộc:
 
 ### ⚠️ Quy tắc TTS tiếng Việt (BẮT BUỘC cho `voiceText`)
 
-`voiceText` được OmniVoice (TTS tiếng Việt) đọc to. **Số và ký
+`voiceText` được VieNeu-TTS (giọng Thiện Minh) đọc to. **Số và ký
 hiệu bị đọc theo nghĩa đen** — vd "5.5" có thể thành "năm rưỡi" (sai cho số phiên
 bản). Vì vậy **luôn viết số ra chữ tiếng Việt trong `voiceText`**. Còn `inputs`
 (chữ hiển thị trên màn hình) thì GIỮ định dạng số đẹp ("5.5" / "82.7%").
@@ -144,7 +144,19 @@ Dùng tool `Write` ghi `<outputDir>/script.json`.
 
 ### Step 8: Chạy pipeline
 
-Bash **foreground**, stream output:
+Trước tiên đảm bảo server giọng đọc VieNeu-TTS đang chạy (mặc định `http://127.0.0.1:8124`):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:8124/tts -H "Content-Type: application/json" -d '{"text":"thử"}'
+```
+
+Nếu không trả về `200` → khởi động server ở chế độ **background** rồi đợi đến khi lệnh trên trả `200` (lần đầu tải model mất vài phút):
+
+```bash
+python tools/vieneu_server.py   # cần: pip install vieneu (Python 3.10–3.12) + ffmpeg
+```
+
+Sau đó chạy pipeline bằng Bash **foreground**, stream output:
 
 ```bash
 npm run pipeline -- <outputDir>/script.json
@@ -165,5 +177,6 @@ Tổng thời lượng: XX.Xs
 ## Ghi chú
 
 - Render mỗi scene ~15–20s (Chromium). Video 8–10 scene ~3–5 phút. Cần ffmpeg + Chrome (đã có).
+- Đổi giọng: đặt `VIENEU_VOICE` (vd `"Hải Đăng"`, `"Mai Anh"`) khi chạy `tools/vieneu_server.py` hoặc trong `.env.local`; 25 giọng có sẵn xem README VieNeu-TTS. Xoá `voice/scene-*.mp3` để đọc lại bằng giọng mới.
 - TTS idempotent (giữ `voice/scene-*.mp3`); clip cũng idempotent (giữ `clips/scene-*.mp4`) — xoá để render lại sau khi sửa inputs.
 - Thêm template mới: làm theo mục cuối `templates/CATALOG.md` rồi bổ sung 1 dòng vào catalog.
