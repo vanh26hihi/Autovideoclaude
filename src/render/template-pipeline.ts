@@ -14,7 +14,7 @@ import {
 } from "../assets/audio-tools.js";
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
 import { composeTemplate } from "./template-composer.js";
-import { inlineSceneImage } from "../assets/image-inline.js";
+import { autoFindSceneImage, inlineSceneImage } from "../assets/image-inline.js";
 import { fitClipToDuration, concatVideos, muxAudioOntoVideo } from "./video-tools.js";
 import { log } from "../utils/logger.js";
 
@@ -135,6 +135,8 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
   await mkdir(clipsDir, { recursive: true });
   const lastIdx = script.scenes.length - 1;
   const fittedClips: string[] = [];
+  const credits: string[] = [];
+  const orientation = script.aspect === "16:9" ? "landscape" : script.aspect === "1:1" ? "square" : "portrait";
   for (let i = 0; i < script.scenes.length; i++) {
     const scene = script.scenes[i];
     const dur = sceneAudio.find((a) => a.id === scene.id)!.durationSec;
@@ -147,9 +149,11 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
     if (existsSync(rawClip)) {
       log.info(`  scene ${scene.id}: REUSE clip — delete to force re-render`);
     } else {
+      const found = await autoFindSceneImage(scene.inputs, orientation, scene.id);
+      if (found.credit) credits.push(found.credit);
       await composeTemplate({
         templateId: scene.templateId,
-        inputs: await inlineSceneImage(scene.inputs, clipsDir, scene.id),
+        inputs: await inlineSceneImage(found.inputs, clipsDir, scene.id),
         aspect: script.aspect,
         outputPath: rawClip,
         fps: RENDER_FPS,
@@ -158,6 +162,11 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
     await fitClipToDuration(rawClip, visualDur, fitClip, RENDER_FPS);
     log.info(`  scene ${scene.id}: ${scene.templateId} → ${visualDur.toFixed(2)}s`);
     fittedClips.push(fitClip);
+  }
+
+  if (credits.length) {
+    await writeFile(join(outputDir, "image-credits.txt"), credits.join("\n") + "\n", "utf8");
+    log.info(`  image credits → ${join(outputDir, "image-credits.txt")}`);
   }
 
   // STEP 7 — concat clips + mux voice

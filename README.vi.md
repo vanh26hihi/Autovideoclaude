@@ -218,6 +218,8 @@ TTS_PROVIDER=vieneu
 VIENEU_ENDPOINT=http://127.0.0.1:8124
 VIENEU_VOICE=Thiện Minh
 VIENEU_SPEED=1.15   # tốc độ đọc của server (1.0 = gốc)
+PEXELS_API_KEY=     # tuỳ chọn: key miễn phí ở pexels.com/api — ảnh đẹp nhất cho các cảnh
+PIXABAY_API_KEY=    # tuỳ chọn: key miễn phí ở pixabay.com/api/docs (không có key: dùng Openverse + Wikimedia)
 ```
 
 Khởi động server giọng đọc trước khi chạy pipeline (lần đầu sẽ tải model):

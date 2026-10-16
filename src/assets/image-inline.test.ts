@@ -43,3 +43,21 @@ describe("inlineSceneImage", () => {
     expect(out.icons).toEqual(["🔥"]);
   });
 });
+
+describe("autoFindSceneImage", () => {
+  it("searches a photo when only image_query is given", async () => {
+    nock("https://api.openverse.org").get("/v1/images/").query(true)
+      .reply(200, { results: [{ url: "https://img/run.jpg", width: 2000, creator: "Bo", license: "by", source: "flickr" }] });
+    const { autoFindSceneImage } = await import("./image-inline.js");
+    const r = await autoFindSceneImage({ image_query: "man running sunrise", icons: ["🏃"] }, "portrait", "b1");
+    expect(r.inputs.image).toBe("https://img/run.jpg");
+    expect(r.credit).toContain("Bo / BY");
+  });
+
+  it("keeps an explicit image", async () => {
+    const { autoFindSceneImage } = await import("./image-inline.js");
+    const r = await autoFindSceneImage({ image: "a.jpg", image_query: "x" }, "portrait", "b2");
+    expect(r.inputs.image).toBe("a.jpg");
+    expect(r.credit).toBeUndefined();
+  });
+});

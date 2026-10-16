@@ -29,7 +29,9 @@ Renders 7 s of motion, so it stays alive for long narration.
 
 | slot      | type     | limit       | notes                                                                      |
 | --------- | -------- | ----------- | -------------------------------------------------------------------------- |
-| `image`   | string   | path / URL  | full-bleed photo (local file or http(s); the pipeline inlines it). Optional |
+| `image_query` | string | 2–5 words | English keywords describing a photo — the pipeline searches the web (Pexels/Pixabay with keys, else Openverse + Wikimedia) and fills `image`. Use on every scene |
+| `image_pick`  | number | ≥0        | take the n-th search result instead of the first (optional)                |
+| `image`   | string   | path / URL  | explicit photo (local file or http(s)); overrides `image_query`. Optional   |
 | `icons`   | string[] | 1–3 emoji   | giant illustration; ignored when an `image` is shown (fallback if it fails) |
 | `layout`  | string   | enum        | `single` · `flow` (A → B → C) · `vs` (two sides + VS badge)                 |
 | `labels`  | string[] | ≤10 each    | label under each icon (handy for `vs`)                                      |
