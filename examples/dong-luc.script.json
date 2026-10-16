@@ -1,0 +1,87 @@
+{
+  "version": "1.0",
+  "renderer": "hyperframes",
+  "aspect": "9:16",
+  "metadata": {
+    "title": "Đừng đợi có động lực mới bắt đầu",
+    "source": { "url": "https://jamesclear.com/atomic-habits", "domain": "jamesclear.com", "image": null },
+    "channel": "Kiến Thức Mỗi Ngày"
+  },
+  "voice": { "provider": "vieneu", "speed": 1.0 },
+  "music": { "file": "assets/music/default.mp3", "volume": 0.15, "fadeOutSec": 3 },
+  "scenes": [
+    {
+      "id": "hook", "type": "hook",
+      "voiceText": "Bạn đang đợi có động lực rồi mới bắt đầu? Đó chính là lý do bạn mãi chưa bắt đầu. Sự thật về động lực ngược hoàn toàn với những gì bạn nghĩ.",
+      "templateId": "frame-liquid-bg-hero",
+      "inputs": { "kicker": "🔥 Động lực", "headline": "Đừng đợi có động lực", "headline_from": "#ffb020", "headline_to": "#ff2d55", "subheadline": "Sự thật ngược với những gì bạn nghĩ", "cta": "Xem đến cuối →", "brand": "Kiến Thức Mỗi Ngày" }
+    },
+    {
+      "id": "body-1", "type": "body",
+      "voiceText": "Phần lớn chúng ta nghĩ phải có động lực thì mới hành động. Nhưng thực tế, động lực thường xuất hiện sau khi bạn đã bắt tay vào làm.",
+      "templateId": "frame-build-minimal",
+      "inputs": { "eyebrow": "Sự thật", "hero": "LÀM TRƯỚC", "desc": "Động lực đến sau hành động, không phải trước", "side_left": "Kiến Thức Mỗi Ngày", "side_right": "Động lực" }
+    },
+    {
+      "id": "body-2", "type": "body",
+      "voiceText": "Hãy thử quy tắc hai phút. Muốn đọc sách, chỉ cần đọc một trang. Muốn tập thể dục, chỉ cần mang giày vào. Bắt đầu thật nhỏ, phần còn lại sẽ tự đến.",
+      "templateId": "frame-vignelli",
+      "inputs": { "kicker": "Quy tắc", "number": "2'", "label": "Chỉ cần bắt đầu 2 phút", "note": "Đọc 1 trang sách. Mang giày tập. Viết 1 câu. Bắt đầu thật nhỏ.", "brand": "Kiến Thức Mỗi Ngày" }
+    },
+    {
+      "id": "body-3", "type": "body",
+      "voiceText": "Nếu mỗi ngày bạn tiến bộ chỉ một phần trăm, sau một năm bạn sẽ giỏi hơn gấp ba mươi bảy lần. Những bước nhỏ cộng dồn lại thành thay đổi khổng lồ.",
+      "templateId": "frame-pentagram-stat",
+      "inputs": { "label": "Sức mạnh 1% mỗi ngày", "headline": "37x", "subtitle": "Tiến bộ 1% mỗi ngày, sau 1 năm bạn giỏi hơn gấp 37 lần", "anchor": "37", "footer_left": "Kiến Thức Mỗi Ngày", "footer_right": "jamesclear.com" }
+    },
+    {
+      "id": "body-4", "type": "body",
+      "voiceText": "Một nghiên cứu theo dõi hàng nghìn trang nhật ký công việc cho thấy, điều khiến con người có động lực nhất chính là cảm giác tiến bộ mỗi ngày, dù chỉ là một chút.",
+      "templateId": "frame-bold-poster",
+      "inputs": { "kicker": "Nghiên cứu", "date": "Harvard", "figure": "1%", "headline": ["Tiến bộ nhỏ", "là động lực", "lớn nhất"], "standfirst": "Cảm giác tiến bộ mỗi ngày, dù rất nhỏ, là thứ giữ lửa động lực lâu nhất.", "footer_left": "Kiến Thức Mỗi Ngày", "footer_right": "Harvard Business Review" }
+    },
+    {
+      "id": "body-5", "type": "body",
+      "voiceText": "Động lực giống như cảm hứng, lúc đến lúc đi. Còn kỷ luật là thói quen, nó vẫn ở đó cả những ngày bạn mệt mỏi nhất.",
+      "templateId": "frame-aicoding-comparison",
+      "inputs": {
+        "badge": "Đối đầu", "pre": "", "vs": "vs", "post": "",
+        "left": { "label": "Hứng", "from": "#ffb020", "to": "#ff7a3d", "icon": "🎢", "bullets": ["Lúc có lúc không", "Phụ thuộc cảm xúc", "Dễ bỏ cuộc"] },
+        "right": { "label": "Kỷ luật", "from": "#34e0c0", "to": "#22d3ee", "icon": "🧱", "bullets": ["Ngày nào cũng làm", "Không cần cảm hứng", "Kết quả bền vững"], "win": true }
+      }
+    },
+    {
+      "id": "body-6", "type": "body",
+      "voiceText": "Để giữ lửa lâu dài, hãy chia mục tiêu thật nhỏ, ghi lại tiến bộ mỗi ngày, làm vào một giờ cố định, và tự thưởng khi hoàn thành.",
+      "templateId": "frame-aicoding-list",
+      "inputs": {
+        "title": "4 cách ", "accent": "giữ lửa", "accent_from": "#ff9a3d", "accent_to": "#ff2d55",
+        "subtitle": "Biến động lực thành thói quen",
+        "items": [
+          { "icon": "🎯", "title": "Chia nhỏ mục tiêu", "desc": "Mỗi bước đủ dễ để bắt đầu ngay", "tag": "Dễ", "level": "good" },
+          { "icon": "📈", "title": "Ghi lại tiến bộ", "desc": "Nhìn thấy mình đang đi lên", "tag": "Lợi", "level": "good" },
+          { "icon": "⏰", "title": "Giờ cố định", "desc": "Làm cùng một giờ mỗi ngày", "tag": "Lợi", "level": "info" },
+          { "icon": "🎁", "title": "Tự thưởng", "desc": "Ăn mừng mỗi lần hoàn thành", "tag": "Vui", "level": "warn" }
+        ]
+      }
+    },
+    {
+      "id": "body-7", "type": "body",
+      "voiceText": "Đừng cố trở thành phiên bản hoàn hảo ngay hôm nay. Chỉ cần tốt hơn hôm qua một chút. Ngày nào cũng vậy.",
+      "templateId": "frame-creative-voltage",
+      "inputs": { "meta": "// TIEN_BO · MOI_NGAY", "display_lines": ["Tốt hơn", "hôm qua", "một chút"], "accent_index": 1, "script": "Mỗi ngày!", "caption": "Không cần hoàn hảo, chỉ cần tiến lên" }
+    },
+    {
+      "id": "body-8", "type": "body",
+      "voiceText": "Vậy việc bạn đang trì hoãn là gì? Đừng đợi nữa. Hãy làm nó trong hai phút, ngay bây giờ.",
+      "templateId": "frame-build-minimal",
+      "inputs": { "eyebrow": "Ngay bây giờ", "hero": "BẮT ĐẦU", "desc": "Làm việc bạn đang trì hoãn, chỉ trong 2 phút", "side_left": "Kiến Thức Mỗi Ngày", "side_right": "Hành động" }
+    },
+    {
+      "id": "outro", "type": "outro",
+      "voiceText": "Theo dõi kênh để mỗi ngày có thêm một lý do để tiến lên nhé.",
+      "templateId": "frame-logo-outro",
+      "inputs": { "brand_name": "Kiến Thức Mỗi Ngày", "tagline": "Mỗi ngày tiến lên một chút", "primary_url": "Nguồn: Atomic Habits · HBR" }
+    }
+  ]
+}
