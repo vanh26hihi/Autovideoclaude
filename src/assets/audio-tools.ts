@@ -230,3 +230,45 @@ export async function mixSfxOntoVoice(
 
   await run("ffmpeg", ffArgs);
 }
+
+export interface MusicMixOpts {
+  /** Music volume 0–1 relative to the narration (before ducking). */
+  volume: number;
+  /** Fade-out length at the end of the video, seconds. */
+  fadeOutSec: number;
+  /** Total output length in seconds (the music is looped/trimmed to fit). */
+  durationSec: number;
+}
+
+/**
+ * Lay a background-music bed under the narration.
+ *
+ * - Music is looped (-stream_loop -1) and trimmed to `durationSec`
+ * - Scaled to `volume`, then ducked further while the voice speaks
+ *   (sidechaincompress keyed on the voice)
+ * - 1 s fade-in, `fadeOutSec` fade-out at the end
+ * - Voice stays at full volume; output is stereo mp3 192kbps
+ */
+export async function mixMusicUnderVoice(
+  voicePath: string,
+  musicPath: string,
+  outPath: string,
+  opts: MusicMixOpts,
+): Promise<void> {
+  const dur = opts.durationSec.toFixed(3);
+  const fadeStart = Math.max(0, opts.durationSec - opts.fadeOutSec).toFixed(3);
+  const filter = [
+    `[0:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=0:${dur},asplit=2[voice][key]`,
+    `[1:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,atrim=0:${dur},` +
+      `volume=${opts.volume},afade=t=in:d=1,afade=t=out:st=${fadeStart}:d=${opts.fadeOutSec}[bed]`,
+    `[bed][key]sidechaincompress=threshold=0.05:ratio=4:attack=20:release=400[ducked]`,
+    `[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[out]`,
+  ].join(";");
+  await run("ffmpeg", [
+    "-y", "-i", voicePath, "-stream_loop", "-1", "-i", musicPath,
+    "-filter_complex", filter,
+    "-map", "[out]",
+    "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100",
+    outPath,
+  ]);
+}

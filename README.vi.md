@@ -228,6 +228,8 @@ python tools/vieneu_server.py
 
 Vẫn dùng được OmniVoice: đặt `TTS_PROVIDER=omnivoice` và `OMNIVOICE_ENDPOINT=http://127.0.0.1:8123`. Cả hai server đều nhận `POST /tts` kèm `{ text }` và trả về bytes `audio/mpeg`.
 
+**Nhạc nền (tuỳ chọn):** đặt file vào `assets/music/default.mp3` để mọi video có nhạc nền (tự lặp, tự hạ nhỏ khi có giọng đọc, fade in/out). Chỉnh riêng từng video bằng `"music": { "file": "...", "volume": 0.15 }` trong `script.json`, hoặc `BG_MUSIC_FILE` / `BG_MUSIC_VOLUME` trong `.env.local`. Chỉ dùng nhạc bạn có quyền sử dụng.
+
 </details>
 
 ---

@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import pLimit from "p-limit";
 import { TemplateScriptSchema, type TemplateScript } from "./template-script-schema.js";
 import { loadConfig } from "../config.js";
@@ -9,6 +9,7 @@ import {
   getDurationSec,
   concatWithSilence,
   mixSfxOntoVoice,
+  mixMusicUnderVoice,
   type SfxMixSpec,
 } from "../assets/audio-tools.js";
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
@@ -20,6 +21,25 @@ const TOTAL_STEPS = 8;
 const SCENE_GAP_SEC = 0.3;
 const OUTRO_HOLD_SEC = 3;
 const RENDER_FPS = 30;
+const DEFAULT_MUSIC_FILE = join("assets", "music", "default.mp3");
+
+/** Resolve the background-music file: script.music → BG_MUSIC_FILE → assets/music/default.mp3. */
+function resolveMusic(script: TemplateScript): { path: string; volume: number; fadeOutSec: number } | null {
+  const spec = script.music;
+  const file = spec?.file ?? process.env.BG_MUSIC_FILE ?? DEFAULT_MUSIC_FILE;
+  if (file === "none") return null;
+  const path = isAbsolute(file) ? file : resolve(process.cwd(), file);
+  if (!existsSync(path)) {
+    if (spec || process.env.BG_MUSIC_FILE) log.info(`  music: file not found (${path}) — skipping`);
+    return null;
+  }
+  const envVol = parseFloat(process.env.BG_MUSIC_VOLUME ?? "");
+  return {
+    path,
+    volume: spec?.volume ?? (isNaN(envVol) ? 0.15 : envVol),
+    fadeOutSec: spec?.fadeOutSec ?? 2,
+  };
+}
 
 /** Maps a scene role to a key the SFX selector understands (tier-3 defaults). */
 const TYPE_TO_SFX: Record<string, string> = {
@@ -144,7 +164,16 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
   const silentVideo = join(outputDir, "video-silent.mp4");
   const videoPath = join(outputDir, "video.mp4");
   await concatVideos(fittedClips, silentVideo);
-  await muxAudioOntoVideo(silentVideo, voiceMp3, videoPath);
+  // Background music goes only into the final video; voice.mp3 stays narration + SFX for CapCut.
+  let finalAudio = voiceMp3;
+  const music = resolveMusic(script);
+  if (music) {
+    finalAudio = join(outputDir, "audio-final.mp3");
+    const videoDur = await getDurationSec(silentVideo);
+    await mixMusicUnderVoice(voiceMp3, music.path, finalAudio, { ...music, durationSec: videoDur });
+    log.info(`  music: ${music.path} (volume ${music.volume})`);
+  }
+  await muxAudioOntoVideo(silentVideo, finalAudio, videoPath);
 
   // STEP 8 — done
   log.step(8, TOTAL_STEPS, "Done");
