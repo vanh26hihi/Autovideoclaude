@@ -16,11 +16,11 @@ const hit = (w: number, h: number, url = `https://v/${w}x${h}.mp4`): VideoHit =>
   ({ url, provider: "x", credit: "x", width: w, height: h, duration: 10 });
 
 describe("pickRendition", () => {
-  it("takes the smallest file that still covers 720p", () => {
+  it("takes the smallest full-HD file (no upscaling)", () => {
     const r = pickRendition([
       { width: 3840, height: 2160 }, { width: 640, height: 360 }, { width: 1280, height: 720 }, { width: 1920, height: 1080 },
     ]);
-    expect(r).toEqual({ width: 1280, height: 720 });
+    expect(r).toEqual({ width: 1920, height: 1080 });
   });
   it("falls back to the biggest when all are small", () => {
     expect(pickRendition([{ width: 640, height: 360 }, { width: 960, height: 540 }])).toEqual({ width: 960, height: 540 });
@@ -40,7 +40,7 @@ describe("searchVideo", () => {
     expect(await searchVideo("man running")).toBeNull();
   });
 
-  it("finds a Pixabay clip and picks a 720p+ rendition", async () => {
+  it("finds a Pixabay clip and picks the 1080p rendition", async () => {
     process.env.PIXABAY_API_KEY = "k";
     nock("https://pixabay.com").get("/api/videos/").query(true).reply(200, {
       hits: [{
@@ -54,7 +54,7 @@ describe("searchVideo", () => {
       }],
     });
     const v = await searchVideo("man running sunrise", "landscape");
-    expect(v).toMatchObject({ url: "https://cdn/m.mp4", provider: "Pixabay", credit: "Bob / Pixabay", duration: 12 });
+    expect(v).toMatchObject({ url: "https://cdn/l.mp4", provider: "Pixabay", credit: "Bob / Pixabay", duration: 12 });
   });
 
   it("retries a 429 from Pixabay", async () => {
@@ -63,5 +63,14 @@ describe("searchVideo", () => {
       .get("/api/videos/").query(true)
       .reply(200, { hits: [{ user: "Bob", videos: { medium: { url: "https://cdn/m.mp4", width: 1280, height: 720 } } }] });
     expect((await searchVideo("rain", "landscape"))?.url).toBe("https://cdn/m.mp4");
+  });
+
+  it("never reuses a clip and prefers another author", async () => {
+    process.env.PIXABAY_API_KEY = "k";
+    const clip = (user: string, n: number) => ({ user, videos: { large: { url: `https://cdn/${n}.mp4`, width: 1920, height: 1080 } } });
+    nock("https://pixabay.com").get("/api/videos/").query(true)
+      .reply(200, { hits: [clip("Ann", 1), clip("Ann", 2), clip("Bob", 3)] });
+    const used = { urls: new Set(["https://cdn/1.mp4"]), authors: new Set(["Ann / Pixabay"]) };
+    expect((await searchVideo("rain", "landscape", 0, used))?.url).toBe("https://cdn/3.mp4");
   });
 });

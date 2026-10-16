@@ -230,11 +230,14 @@ const pexelsVideos: VideoProvider = async (q, o) => {
   }).filter(Boolean);
 };
 
-/** Smallest file that still fills a 1080p frame after cropping (short side ≥ 720), else the biggest. */
+/** Smallest file that is full-HD (short side ≥ 1080, no upscaling), else the biggest there is. */
 export function pickRendition<T extends { width: number; height: number }>(files: T[]): T | undefined {
   const sorted = [...files].sort((a, b) => a.width * a.height - b.width * b.height);
-  return sorted.find((f) => Math.min(f.width, f.height) >= 720) ?? sorted[sorted.length - 1];
+  return sorted.find((f) => Math.min(f.width, f.height) >= 1080) ?? sorted[sorted.length - 1];
 }
+
+/** "Bob / Pixabay — https://…" or "Bob / Pixabay" → "Bob / Pixabay". */
+export const creditAuthor = (credit: string) => credit.split(" — ")[0].trim();
 
 /** Clips that match the frame's orientation (less cropping) come first; order is otherwise kept. */
 export function rankVideos(hits: VideoHit[], o: Orientation): VideoHit[] {
@@ -257,10 +260,13 @@ export async function searchVideo(
   query: string,
   orientation: Orientation = "portrait",
   pick = 0,
+  /** Clips/authors already used in this video: never reuse a clip, and prefer another author. */
+  used: { urls: Set<string>; authors: Set<string> } = { urls: new Set(), authors: new Set() },
 ): Promise<VideoHit | null> {
   for (const [name, fn] of VIDEO_PROVIDERS) {
     try {
-      const hits = rankVideos((await politely(name, () => fn(query.trim(), orientation))).filter((h) => h.url), orientation);
+      const fresh = rankVideos((await politely(name, () => fn(query.trim(), orientation))).filter((h) => h.url && !used.urls.has(h.url)), orientation);
+      const hits = [...fresh.filter((h) => !used.authors.has(h.credit)), ...fresh.filter((h) => used.authors.has(h.credit))];
       if (hits.length) return hits[Math.min(pick, hits.length - 1)];
     } catch (e: any) {
       log.info(`  video search ${name}: ${e.response?.status ?? e.message ?? e}`);

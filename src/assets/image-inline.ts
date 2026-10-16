@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { extname, isAbsolute, join, resolve } from "node:path";
 import { fetchImage, fetchVideo } from "./image-fetcher.js";
-import { searchImage, searchVideo, type Orientation } from "./image-search.js";
+import { creditAuthor, searchImage, searchVideo, type Orientation } from "./image-search.js";
 import { log } from "../utils/logger.js";
 
 const MIME: Record<string, string> = {
@@ -124,11 +124,16 @@ export async function autoFindSceneImage(
  * and the clip is downloaded into the cache. `video_pick` picks another result.
  * Returns the local file + credit, or null (the scene then uses its photo/icons).
  */
+/** Clips and authors already placed in the current video (see autoFindSceneVideo). */
+export type UsedVideos = { urls: Set<string>; authors: Set<string> };
+export const newUsedVideos = (): UsedVideos => ({ urls: new Set(), authors: new Set() });
+
 export async function autoFindSceneVideo(
   inputs: Record<string, unknown>,
   orientation: Orientation,
   sceneId: string,
   cacheDir: string = IMAGE_CACHE_DIR,
+  used: UsedVideos = newUsedVideos(),
 ): Promise<{ file: string; credit?: string } | null> {
   if (typeof inputs.video === "string" && inputs.video.trim()) {
     const file = isAbsolute(inputs.video) ? inputs.video : resolve(process.cwd(), inputs.video);
@@ -141,25 +146,38 @@ export async function autoFindSceneVideo(
   const key = createHash("sha1").update(`video|${query.trim().toLowerCase()}|${orientation}|${pick}`).digest("hex").slice(0, 16);
   const file = join(resolve(cacheDir), `${key}.mp4`);
   const creditFile = `${file}.txt`;
+  const remember = (credit: string) => {
+    const url = credit.split(" — ")[1]?.trim();
+    if (url) used.urls.add(url);
+    used.authors.add(creditAuthor(credit));
+  };
 
   if (existsSync(file)) {
     const credit = existsSync(creditFile) ? (await readFile(creditFile, "utf8")).trim() : "cached";
-    log.info(`  scene ${sceneId}: video "${query}" (cached)`);
-    return { file, credit: `${sceneId}: ${credit}` };
+    const url = credit.split(" — ")[1]?.trim();
+    // a cached clip another scene of this video already shows → search again for a different one
+    if (!url || !used.urls.has(url)) {
+      remember(credit);
+      log.info(`  scene ${sceneId}: video "${query}" (cached)`);
+      return { file, credit: `${sceneId}: ${credit}` };
+    }
   }
 
-  const hit = await searchVideo(query.trim(), orientation, pick);
+  const hit = await searchVideo(query.trim(), orientation, pick, used);
   if (!hit) {
     log.info(`  scene ${sceneId}: no video found for "${query}" — using photo/icons`);
     return null;
   }
-  const res = await fetchVideo(hit.url, file);
+  // a re-search after a duplicate must not overwrite the other scene's cached clip
+  const target = existsSync(file) ? join(resolve(cacheDir), `${key}-${createHash("sha1").update(hit.url).digest("hex").slice(0, 8)}.mp4`) : file;
+  const res = await fetchVideo(hit.url, target);
   if (!res.success) {
     log.info(`  scene ${sceneId}: video download failed (${res.reason}) — using photo/icons`);
     return null;
   }
   const credit = `${hit.credit} — ${hit.url}`;
-  await writeFile(creditFile, credit + "\n", "utf8");
+  await writeFile(`${target}.txt`, credit + "\n", "utf8");
+  remember(credit);
   log.info(`  scene ${sceneId}: video "${query}" → ${hit.provider} ${hit.width}x${hit.height} (${hit.credit})`);
-  return { file, credit: `${sceneId}: ${credit}` };
+  return { file: target, credit: `${sceneId}: ${credit}` };
 }

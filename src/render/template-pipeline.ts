@@ -14,7 +14,7 @@ import {
 } from "../assets/audio-tools.js";
 import { indexSfxLibrary, pickSfxForScene, defaultPlayback } from "../assets/sfx-selector.js";
 import { composeTemplate } from "./template-composer.js";
-import { autoFindSceneImage, autoFindSceneVideo, inlineSceneImage } from "../assets/image-inline.js";
+import { autoFindSceneImage, autoFindSceneVideo, inlineSceneImage, newUsedVideos, IMAGE_CACHE_DIR } from "../assets/image-inline.js";
 import { fitClipToDuration, concatVideos, muxAudioOntoVideo, finishVideo, prepBackgroundVideo } from "./video-tools.js";
 import { detectSpeechSegments, estimateWordTimings, writeKaraokeAss, DEFAULT_KARAOKE, type WordTiming } from "./karaoke.js";
 import { log } from "../utils/logger.js";
@@ -143,6 +143,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
   const lastIdx = script.scenes.length - 1;
   const fittedClips: string[] = [];
   const credits: string[] = [];
+  const usedVideos = newUsedVideos(); // no clip twice in one video
   const orientation = script.aspect === "16:9" ? "landscape" : script.aspect === "1:1" ? "square" : "portrait";
   for (let i = 0; i < script.scenes.length; i++) {
     const scene = script.scenes[i];
@@ -157,7 +158,7 @@ export async function runTemplatePipeline(scriptPath: string): Promise<void> {
       log.info(`  scene ${scene.id}: REUSE clip — delete to force re-render`);
     } else {
       // A stock video clip (video_query) wins over a photo; the photo/icons are the fallback.
-      const video = await autoFindSceneVideo(scene.inputs, orientation, scene.id);
+      const video = await autoFindSceneVideo(scene.inputs, orientation, scene.id, IMAGE_CACHE_DIR, usedVideos);
       let bgVideo: string | undefined;
       if (video) {
         bgVideo = join(clipsDir, `scene-${scene.id}.bg.mp4`);
